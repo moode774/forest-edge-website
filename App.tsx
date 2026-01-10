@@ -29,7 +29,7 @@ const ScrollToTop = () => {
 };
 
 const App: React.FC = () => {
-  const [lang, setLang] = useState<Language>('ar'); // Default to Arabic as per region probability or make it 'en'
+  const [lang, setLang] = useState<Language>('en'); // Default to English
   const [isLoading, setIsLoading] = useState(true);
 
   const toggleLang = () => {
