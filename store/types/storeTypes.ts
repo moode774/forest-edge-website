@@ -28,6 +28,9 @@ export interface OrderCustomer {
   address: string;
   city: string;
   notes: string;
+  type: 'individual' | 'company';
+  companyName?: string;
+  vatNumber?: string;
 }
 
 export interface Order {
@@ -40,4 +43,22 @@ export interface Order {
   status: 'confirmed' | 'processing' | 'shipped' | 'delivered';
   customer: OrderCustomer;
   paymentMethod: 'cash' | 'card' | 'bank';
+  userId?: string;
+  userEmail?: string;
+}
+
+export interface Customer {
+  id: string;               // Firebase UID
+  type: 'individual' | 'company';
+  name: string;
+  email: string;
+  phone: string;
+  companyName?: string;
+  vatNumber?: string;
+  city?: string;
+  address?: string;
+  totalOrders: number;
+  totalSpent: number;
+  createdAt: string;
+  lastOrderAt: string;
 }

@@ -4,16 +4,17 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
 import {
   LayoutDashboard, Package, ShoppingBag,
-  LogOut, Menu, X, ChevronRight, Home
+  LogOut, Menu, X, ChevronRight, Home, Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AdminLayoutProps { children: React.ReactNode; }
 
 const navItems = [
-  { path: '/admin',          label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/admin/orders',   label: 'Orders',    icon: ShoppingBag,     exact: false },
-  { path: '/admin/products', label: 'Products',  icon: Package,         exact: false },
+  { path: '/admin',            label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { path: '/admin/orders',     label: 'Orders',    icon: ShoppingBag,     exact: false },
+  { path: '/admin/products',   label: 'Products',  icon: Package,         exact: false },
+  { path: '/admin/customers',  label: 'Customers', icon: Users,           exact: false },
 ];
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {

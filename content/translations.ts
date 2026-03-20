@@ -9,6 +9,7 @@ export const translations: Record<'en' | 'ar', TranslationStructure> = {
       products: "Catalog",
       portfolio: "Portfolio",
       contact: "Contact",
+      experience: "Experience",
     },
     hero: {
       title: "Crafting Timeless Elegance",
@@ -99,6 +100,20 @@ export const translations: Record<'en' | 'ar', TranslationStructure> = {
       quickLinks: "Quick Links",
       rights: "All Rights Reserved © Forest Edge",
     },
+    cart: {
+      title: "Your Cart",
+      empty: "Your cart is empty",
+      emptyDesc: "Discover our luxury furniture collection and add your favourite pieces",
+      browse: "Browse Store",
+      subtotal: "Subtotal",
+      delivery: "Delivery",
+      free: "Free",
+      total: "Total",
+      checkout: "Proceed to Checkout",
+      continue: "Continue Shopping",
+      freeNotice: "Add {amount} SAR more for free delivery",
+      freeIncluded: "Free delivery included",
+    },
   },
   ar: {
     nav: {
@@ -108,6 +123,7 @@ export const translations: Record<'en' | 'ar', TranslationStructure> = {
       products: "المنتجات",
       portfolio: "أعمالنا",
       contact: "تواصل معنا",
+      experience: "التجربة",
     },
     hero: {
       title: "نصنع الأناقة الخالدة",
@@ -197,6 +213,20 @@ export const translations: Record<'en' | 'ar', TranslationStructure> = {
       desc: "فورست إيدج تمثل نقطة التقاء الطبيعة مع الحرفية الفاخرة.",
       quickLinks: "روابط سريعة",
       rights: "جميع الحقوق محفوظة © Forest Edge",
+    },
+    cart: {
+      title: "سلة المشتريات",
+      empty: "سلتك فارغة",
+      emptyDesc: "اكتشف مجموعتنا من الأثاث الفاخر وأضف قطعك المفضلة",
+      browse: "تصفح المتجر",
+      subtotal: "المجموع الفرعي",
+      delivery: "التوصيل",
+      free: "مجاني",
+      total: "الإجمالي",
+      checkout: "متابعة الطلب",
+      continue: "مواصلة التسوق",
+      freeNotice: "أضف {amount} SAR للحصول على شحن مجاني",
+      freeIncluded: "يشمل شحن مجاني",
     },
   },
 };

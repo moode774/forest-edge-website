@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { Link, useNavigate } from 'react-router-dom';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { db, auth } from '../firebase';
 import {
   Package, ChevronDown, ChevronUp, ShoppingBag,
   CheckCircle2, Clock, Truck, MapPin, ArrowRight,
-  FileText, Search, Wifi
+  FileText, Wifi, LogOut, User
 } from 'lucide-react';
 import { useLang } from '../App';
 
@@ -60,7 +61,6 @@ const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang })
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-[2rem] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[#282828]/5"
     >
-      {/* Order Header */}
       <button
         onClick={() => setExpanded(e => !e)}
         className="w-full text-left flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 md:p-8 hover:bg-[#FDFCFB] transition-colors"
@@ -74,7 +74,6 @@ const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang })
             <p className="text-[#737373] text-xs f-sans mt-0.5">{dateStr}</p>
           </div>
         </div>
-
         <div className="flex items-center gap-4 flex-wrap">
           <span className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border f-sans ${status.color}`}>
             <StatusIcon size={12} />
@@ -92,7 +91,6 @@ const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang })
         </div>
       </button>
 
-      {/* Expanded Details */}
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -176,6 +174,9 @@ const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang })
                   </p>
                   <div className="space-y-2 text-[#737373] text-sm f-sans">
                     <p><span className="font-bold text-[#282828]">{ar ? 'الاسم:' : 'Name:'}</span> {order.customer?.name}</p>
+                    {order.customer?.companyName && (
+                      <p><span className="font-bold text-[#282828]">{ar ? 'الشركة:' : 'Company:'}</span> {order.customer.companyName}</p>
+                    )}
                     <p><span className="font-bold text-[#282828]">{ar ? 'الهاتف:' : 'Phone:'}</span> {order.customer?.phone}</p>
                     <p><span className="font-bold text-[#282828]">{ar ? 'العنوان:' : 'Address:'}</span> {order.customer?.address}, {order.customer?.city}</p>
                     {order.customer?.notes && (
@@ -233,18 +234,30 @@ const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang })
 export const Orders: React.FC = () => {
   const { lang } = useLang();
   const ar = lang === 'ar';
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const phone = localStorage.getItem('fe_customer_phone');
-
+  // ── Auth state ──
   useEffect(() => {
-    if (!phone) {
-      setLoading(false);
-      return;
-    }
-    // Real-time listener — status changes from admin appear instantly
-    const q = query(collection(db, 'orders'), where('customer.phone', '==', phone));
+    const unsub = onAuthStateChanged(auth, u => {
+      setUser(u);
+      setAuthChecked(true);
+      if (!u) setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  // ── Real-time orders by UID ──
+  useEffect(() => {
+    if (!authChecked || !user) return;
+    const q = query(
+      collection(db, 'orders'),
+      where('userId', '==', user.uid)
+    );
     const unsub = onSnapshot(q, snap => {
       const fetched = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       fetched.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -252,67 +265,94 @@ export const Orders: React.FC = () => {
       setLoading(false);
     }, () => setLoading(false));
     return () => unsub();
-  }, [phone]);
+  }, [user, authChecked]);
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    navigate('/checkout');
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] f-sans" dir={ar ? 'rtl' : 'ltr'}>
       {/* Page Header */}
       <div className="bg-white border-b border-[#282828]/5">
         <div className="max-w-[1100px] mx-auto px-6 md:px-12 py-16 md:py-20">
-          <span className="text-[#8A7A6B] text-[10px] font-bold uppercase tracking-[0.3em] block mb-4">
-            {ar ? 'حسابي' : 'My Account'}
-          </span>
-          <h1 className="font-serif text-[#282828] text-4xl md:text-5xl leading-tight">
-            {ar ? 'طلباتي' : 'My Orders'}
-          </h1>
-          <p className="text-[#737373] text-lg mt-4 f-sans font-light">
-            {ar
-              ? 'تتبع جميع طلباتك ومشترياتك من فورست إيدج — تتحدث تلقائياً'
-              : 'Track all your orders from Forest Edge — updates automatically in real-time'}
-          </p>
-
-          {/* Real-time badge */}
-          <div className="flex items-center gap-2 mt-4">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-xs text-[#737373] f-sans">
-              {ar ? 'متزامن مباشرةً مع النظام' : 'Live sync — status updates appear instantly'}
-            </span>
-            <Wifi size={12} className="text-green-400" />
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <span className="text-[#8A7A6B] text-[10px] font-bold uppercase tracking-[0.3em] block mb-4">
+                {ar ? 'حسابي' : 'My Account'}
+              </span>
+              <h1 className="font-serif text-[#282828] text-4xl md:text-5xl leading-tight">
+                {ar ? 'طلباتي' : 'My Orders'}
+              </h1>
+              {user && (
+                <p className="text-[#737373] text-sm mt-3 f-sans flex items-center gap-2">
+                  <User size={13} />
+                  {user.email}
+                </p>
+              )}
+            </div>
+            {user && (
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 text-[#737373] text-[11px] font-bold uppercase tracking-widest hover:text-[#282828] transition-colors f-sans mt-2"
+              >
+                <LogOut size={14} />
+                {ar ? 'تسجيل خروج' : 'Sign Out'}
+              </button>
+            )}
           </div>
+
+          {user && (
+            <div className="flex items-center gap-2 mt-4">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-xs text-[#737373] f-sans">
+                {ar ? 'متزامن مباشرةً — تتحدث حالة الطلب فوراً' : 'Live sync — order status updates instantly'}
+              </span>
+              <Wifi size={12} className="text-green-400" />
+            </div>
+          )}
         </div>
       </div>
 
       <div className="max-w-[1100px] mx-auto px-6 md:px-12 py-16">
 
-        {loading ? (
-          <div className="flex items-center justify-center py-40">
-            <div className="w-10 h-10 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
-          </div>
-        ) : !phone ? (
-          /* No phone stored — customer visited from a different browser */
+        {/* ── Not signed in ── */}
+        {authChecked && !user && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="text-center py-24"
           >
             <div className="w-24 h-24 rounded-full bg-[#F5F2EE] flex items-center justify-center mx-auto mb-8">
-              <Search size={36} className="text-[#8A7A6B]/40" />
+              <User size={36} className="text-[#8A7A6B]/40" />
             </div>
             <h3 className="font-serif text-[#282828] text-3xl mb-4">
-              {ar ? 'تتبع طلبك' : 'Track your order'}
+              {ar ? 'سجّل دخولك لرؤية طلباتك' : 'Sign in to see your orders'}
             </h3>
             <p className="text-[#737373] text-base f-sans max-w-md mx-auto leading-relaxed mb-10">
               {ar
-                ? 'لم يتم العثور على طلبات من هذا المتصفح. أدخل رقم الطلب أو رقم الهاتف للبحث.'
-                : 'No orders found from this browser. Enter your order number or phone to look up your order.'}
+                ? 'حسابك يتيح لك متابعة جميع طلباتك من أي جهاز وفي أي وقت.'
+                : 'Your account lets you track all your orders from any device, anytime.'}
             </p>
             <Link
-              to="/track"
+              to="/checkout"
               className="inline-flex items-center gap-3 bg-[#282828] text-white px-10 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-[#8A7A6B] transition-all f-sans"
             >
-              <Search size={14} />
-              {ar ? 'ابحث عن طلبك' : 'Find My Order'}
+              <Package size={14} />
+              {ar ? 'تسجيل الدخول / إنشاء حساب' : 'Sign In / Create Account'}
+              <ArrowRight size={14} className={ar ? 'rotate-180' : ''} />
             </Link>
           </motion.div>
-        ) : orders.length === 0 ? (
+        )}
+
+        {/* ── Loading ── */}
+        {loading && user && (
+          <div className="flex items-center justify-center py-40">
+            <div className="w-10 h-10 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
+          </div>
+        )}
+
+        {/* ── Empty ── */}
+        {!loading && user && orders.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="text-center py-28"
           >
@@ -336,7 +376,10 @@ export const Orders: React.FC = () => {
               <ArrowRight size={14} className={ar ? 'rotate-180' : ''} />
             </Link>
           </motion.div>
-        ) : (
+        )}
+
+        {/* ── Orders list ── */}
+        {!loading && user && orders.length > 0 && (
           <>
             {/* Stats Bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
@@ -368,27 +411,8 @@ export const Orders: React.FC = () => {
               ))}
             </div>
 
-            {/* Track from another browser */}
-            <div className="mt-12 bg-[#F5F2EE] rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <p className="text-[#282828] font-bold f-sans text-sm">
-                  {ar ? 'هل تستخدم متصفحاً آخر؟' : 'Using a different device or browser?'}
-                </p>
-                <p className="text-[#737373] text-xs f-sans mt-1">
-                  {ar ? 'يمكنك البحث عن طلبك بأي رقم طلب أو رقم هاتف' : 'Look up any order by order number or phone number'}
-                </p>
-              </div>
-              <Link
-                to="/track"
-                className="flex items-center gap-2 bg-[#282828] text-white px-6 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-[#8A7A6B] transition-all f-sans whitespace-nowrap"
-              >
-                <Search size={13} />
-                {ar ? 'بحث عن طلب' : 'Track an Order'}
-              </Link>
-            </div>
-
             {/* Continue Shopping */}
-            <div className="text-center mt-10">
+            <div className="text-center mt-12">
               <Link to="/store"
                 className="inline-flex items-center gap-3 text-[#8A7A6B] text-[11px] font-bold uppercase tracking-[0.2em] hover:text-[#282828] transition-colors f-sans"
               >

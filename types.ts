@@ -10,6 +10,7 @@ export interface TranslationStructure {
     products: string;
     portfolio: string;
     contact: string;
+    experience: string;
   };
   hero: {
     title: string;
@@ -61,6 +62,20 @@ export interface TranslationStructure {
     desc: string;
     quickLinks: string;
     rights: string;
+  };
+  cart: {
+    title: string;
+    empty: string;
+    emptyDesc: string;
+    browse: string;
+    subtotal: string;
+    delivery: string;
+    free: string;
+    total: string;
+    checkout: string;
+    continue: string;
+    freeNotice: string;
+    freeIncluded: string;
   };
 }
 

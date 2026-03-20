@@ -146,14 +146,23 @@ const OrderRow: React.FC<{ order: any }> = ({ order }) => {
 export const AdminOrders: React.FC = () => {
   const [orders,  setOrders]  = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
   const [search,  setSearch]  = useState('');
   const [filter,  setFilter]  = useState<Status | 'all'>('all');
 
   useEffect(() => {
     const unsub = onSnapshot(
       query(collection(db, 'orders'), orderBy('date', 'desc')),
-      snap => { setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false); },
-      () => setLoading(false)
+      snap => {
+        setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setDbError(null);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Firestore orders error:', err.code, err.message);
+        setDbError(`${err.code}: ${err.message}`);
+        setLoading(false);
+      }
     );
     return () => unsub();
   }, []);
@@ -175,6 +184,17 @@ export const AdminOrders: React.FC = () => {
             <p className="text-[#737373] text-sm mt-1 f-sans">{orders.length} total orders</p>
           </div>
         </div>
+
+        {/* Firestore error banner */}
+        {dbError && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
+            <p className="text-red-700 font-bold text-sm f-sans mb-1">Firestore Connection Error</p>
+            <p className="text-red-600 text-xs f-sans font-mono">{dbError}</p>
+            <p className="text-red-500 text-xs f-sans mt-2">
+              Check Firebase Console → Firestore → Rules and ensure Email/Password auth is enabled.
+            </p>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">

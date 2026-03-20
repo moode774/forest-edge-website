@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
-  collection, addDoc, getDocs, doc, updateDoc,
-  query, orderBy, onSnapshot, setDoc
+  collection, doc, onSnapshot, setDoc, runTransaction, increment
 } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { CartItem, Order, OrderCustomer, StoreProduct } from '../types/storeTypes';
+import { db, auth } from '../../firebase';
+import { CartItem, Customer, Order, OrderCustomer, StoreProduct } from '../types/storeTypes';
 
 interface StoreContextType {
   cart: CartItem[];
@@ -110,6 +109,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const total = subtotal + delivery;
     const orderId = generateOrderId();
 
+    // Auth is required — step 0 in checkout enforces this
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      throw new Error('Authentication required. Please sign in to place an order.');
+    }
+    const userEmail = auth.currentUser.email || customer.email || '';
+
     const order: Order = {
       id: orderId,
       date: new Date().toISOString(),
@@ -120,31 +126,62 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'confirmed',
       customer,
       paymentMethod,
+      userId: uid,
+      userEmail,
     };
 
-    // Save customer identity for cross-browser tracking
-    try {
-      localStorage.setItem('fe_customer_phone', customer.phone);
-    } catch {}
+    // ── Save order to Firestore (throws on failure) ──
+    await setDoc(doc(db, 'orders', orderId), {
+      ...order,
+      items: order.items.map(item => ({
+        quantity: item.quantity,
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          images: item.product.images,
+          category: item.product.category,
+        }
+      }))
+    });
 
-    // Save to Firestore
-    try {
-      await setDoc(doc(db, 'orders', orderId), {
-        ...order,
-        // Convert items to plain objects for Firestore
-        items: order.items.map(item => ({
-          quantity: item.quantity,
-          product: {
-            id: item.product.id,
-            name: item.product.name,
-            price: item.product.price,
-            images: item.product.images,
-            category: item.product.category,
+    // ── Create / update customer profile ──
+    if (uid) {
+      try {
+        const now = new Date().toISOString();
+        await runTransaction(db, async (t) => {
+          const customerRef = doc(db, 'customers', uid);
+          const snap = await t.get(customerRef);
+          const base = {
+            id: uid,
+            type: customer.type || 'individual',
+            name: customer.name,
+            email: userEmail,
+            phone: customer.phone,
+            companyName: customer.companyName || null,
+            vatNumber: customer.vatNumber || null,
+            city: customer.city,
+            address: customer.address,
+            lastOrderAt: now,
+          };
+          if (snap.exists()) {
+            t.update(customerRef, {
+              ...base,
+              totalOrders: increment(1),
+              totalSpent: increment(total),
+            });
+          } else {
+            t.set(customerRef, {
+              ...base,
+              totalOrders: 1,
+              totalSpent: total,
+              createdAt: now,
+            });
           }
-        }))
-      });
-    } catch (err) {
-      console.error('Failed to save order to Firestore:', err);
+        });
+      } catch (err) {
+        console.error('Failed to update customer profile:', err);
+      }
     }
 
     setOrders((prev) => [order, ...prev]);

@@ -19,6 +19,7 @@ import { AdminLogin } from './pages/admin/AdminLogin';
 import { Dashboard } from './pages/admin/Dashboard';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminProducts } from './pages/admin/AdminProducts';
+import { AdminCustomers } from './pages/admin/AdminCustomers';
 import { ProductForm } from './pages/admin/ProductForm';
 import { Language } from './types';
 import { StoreProvider } from './store/context/StoreContext';
@@ -184,6 +185,7 @@ const App: React.FC = () => {
             <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
             <Route path="/admin/products/new" element={<AdminRoute><ProductForm /></AdminRoute>} />
             <Route path="/admin/products/edit/:id" element={<AdminRoute><ProductForm /></AdminRoute>} />
+            <Route path="/admin/customers" element={<AdminRoute><AdminCustomers /></AdminRoute>} />
 
             {/* ── Public routes (inside MasterLayout) ── */}
             <Route path="/*" element={
