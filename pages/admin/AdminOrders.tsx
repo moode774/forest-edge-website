@@ -1,251 +1,114 @@
-import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { 
+  Search, Eye, Printer, Truck, CheckCircle2, 
+  MapPin, Phone, User, Calendar, SlidersHorizontal, ArrowUpRight
+} from 'lucide-react';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { AdminLayout } from './AdminLayout';
-import { ChevronDown, ChevronUp, Search, Filter, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
-const STATUSES = ['confirmed', 'processing', 'shipped', 'delivered'] as const;
-type Status = typeof STATUSES[number];
-
-const statusColor: Record<Status, string> = {
-  confirmed:  'bg-blue-50 text-blue-600 border-blue-100',
-  processing: 'bg-amber-50 text-amber-600 border-amber-100',
-  shipped:    'bg-purple-50 text-purple-600 border-purple-100',
-  delivered:  'bg-green-50 text-green-600 border-green-100',
+const statusConfig = {
+  confirmed: { color: '#3B82F6', text: 'CONFIRMED', bg: 'rgba(59, 130, 246, 0.1)' },
+  processing: { color: '#F59E0B', text: 'PROCESSING', bg: 'rgba(245, 158, 11, 0.1)' },
+  shipped: { color: '#8B5CF6', text: 'SHIPPED', bg: 'rgba(139, 92, 246, 0.1)' },
+  delivered: { color: '#10B981', text: 'DELIVERED', bg: 'rgba(16, 185, 129, 0.1)' },
 };
 
-const OrderRow: React.FC<{ order: any }> = ({ order }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [status, setStatus] = useState<Status>(order.status || 'confirmed');
-  const [saving, setSaving] = useState(false);
-
-  const handleStatusChange = async (newStatus: Status) => {
-    setSaving(true);
-    setStatus(newStatus);
-    try {
-      await updateDoc(doc(db, 'orders', order.id), { status: newStatus });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="border-b border-[#282828]/5 last:border-0">
-      {/* Row */}
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center gap-4 px-6 py-4 hover:bg-[#FDFCFB] transition-colors text-left"
-      >
-        <span className="text-xs font-bold text-[#282828] f-sans w-28 flex-shrink-0 tracking-wide">{order.id}</span>
-        <span className="text-sm text-[#282828] f-sans flex-grow min-w-0 truncate">{order.customer?.name || '—'}</span>
-        <span className="text-sm font-bold text-[#282828] f-sans w-32 flex-shrink-0 text-right">{(order.total || 0).toLocaleString()} SAR</span>
-        <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-full border f-sans flex-shrink-0 ${statusColor[status]}`}>
-          {status}
-        </span>
-        <span className="text-xs text-[#737373] f-sans w-24 flex-shrink-0 text-right hidden md:block">
-          {new Date(order.date).toLocaleDateString('en-SA')}
-        </span>
-        <span className="text-[#737373] flex-shrink-0">
-          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </span>
-      </button>
-
-      {/* Expanded Detail */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden"
-          >
-            <div className="px-6 pb-6 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-              {/* Change Status */}
-              <div className="bg-[#F5F2EE] rounded-2xl p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#282828] mb-4 f-sans">Update Status</p>
-                <div className="space-y-2">
-                  {STATUSES.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => handleStatusChange(s)}
-                      disabled={saving}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all text-[11px] font-bold uppercase tracking-widest f-sans ${
-                        status === s
-                          ? `${statusColor[s]} border-current`
-                          : 'border-transparent text-[#737373] hover:bg-white'
-                      }`}
-                    >
-                      {s}
-                      {status === s && <div className="w-2 h-2 rounded-full bg-current" />}
-                    </button>
-                  ))}
-                </div>
-                {saving && (
-                  <div className="flex items-center gap-2 mt-3 text-[#8A7A6B] text-xs f-sans">
-                    <RefreshCw size={12} className="animate-spin" /> Saving...
-                  </div>
-                )}
-              </div>
-
-              {/* Customer Info */}
-              <div className="bg-[#F5F2EE] rounded-2xl p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#282828] mb-4 f-sans">Customer</p>
-                <div className="space-y-2 text-sm f-sans text-[#737373]">
-                  <p><span className="text-[#282828] font-bold">Name:</span> {order.customer?.name}</p>
-                  <p><span className="text-[#282828] font-bold">Phone:</span> {order.customer?.phone}</p>
-                  {order.customer?.email && <p><span className="text-[#282828] font-bold">Email:</span> {order.customer?.email}</p>}
-                  <p><span className="text-[#282828] font-bold">City:</span> {order.customer?.city}</p>
-                  <p><span className="text-[#282828] font-bold">Address:</span> {order.customer?.address}</p>
-                  {order.customer?.notes && <p><span className="text-[#282828] font-bold">Notes:</span> {order.customer?.notes}</p>}
-                </div>
-              </div>
-
-              {/* Items + Total */}
-              <div className="bg-[#F5F2EE] rounded-2xl p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#282828] mb-4 f-sans">Items</p>
-                <div className="space-y-3">
-                  {(order.items || []).map((item: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3">
-                      {item.product?.images?.[0] && (
-                        <img src={item.product.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                      )}
-                      <div className="min-w-0 flex-grow">
-                        <p className="text-xs font-bold text-[#282828] truncate f-sans">
-                          {item.product?.name?.en || item.product?.name || '—'}
-                        </p>
-                        <p className="text-[10px] text-[#737373] f-sans">Qty: {item.quantity}</p>
-                      </div>
-                      <p className="text-xs font-bold text-[#282828] f-sans flex-shrink-0">
-                        {((item.product?.price || 0) * item.quantity).toLocaleString()} SAR
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-4 border-t border-[#282828]/10 space-y-1 text-xs f-sans text-[#737373]">
-                  <div className="flex justify-between"><span>Subtotal</span><span>{(order.subtotal || 0).toLocaleString()} SAR</span></div>
-                  <div className="flex justify-between"><span>Delivery</span><span>{order.delivery === 0 ? 'Free' : `${order.delivery} SAR`}</span></div>
-                  <div className="flex justify-between text-[#282828] font-bold text-sm pt-1 border-t border-[#282828]/10">
-                    <span>Total</span><span>{(order.total || 0).toLocaleString()} SAR</span>
-                  </div>
-                  <div className="flex justify-between pt-1"><span>Payment</span><span className="uppercase font-bold">{order.paymentMethod}</span></div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-export const AdminOrders: React.FC = () => {
-  const [orders,  setOrders]  = useState<any[]>([]);
+const AdminOrders: React.FC = () => {
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dbError, setDbError] = useState<string | null>(null);
-  const [search,  setSearch]  = useState('');
-  const [filter,  setFilter]  = useState<Status | 'all'>('all');
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db, 'orders'), orderBy('date', 'desc')),
-      snap => {
-        setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setDbError(null);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Firestore orders error:', err.code, err.message);
-        setDbError(`${err.code}: ${err.message}`);
-        setLoading(false);
-      }
-    );
+    const q = query(collection(db, 'orders'), orderBy('date', 'desc'));
+    const unsub = onSnapshot(q, snap => {
+      setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    });
     return () => unsub();
   }, []);
 
-  const filtered = orders.filter(o => {
-    const matchSearch = !search || o.id.toLowerCase().includes(search.toLowerCase()) || o.customer?.name?.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'all' || o.status === filter;
-    return matchSearch && matchFilter;
-  });
-
   return (
-    <AdminLayout>
-      <div className="p-6 md:p-10">
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-serif text-[#282828] text-3xl">Orders</h1>
-            <p className="text-[#737373] text-sm mt-1 f-sans">{orders.length} total orders</p>
-          </div>
-        </div>
-
-        {/* Firestore error banner */}
-        {dbError && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
-            <p className="text-red-700 font-bold text-sm f-sans mb-1">Firestore Connection Error</p>
-            <p className="text-red-600 text-xs f-sans font-mono">{dbError}</p>
-            <p className="text-red-500 text-xs f-sans mt-2">
-              Check Firebase Console → Firestore → Rules and ensure Email/Password auth is enabled.
-            </p>
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-grow">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#737373]" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by order ID or customer name..."
-              className="w-full pl-11 pr-4 py-3 bg-white border border-[#282828]/10 rounded-xl text-sm text-[#282828] focus:outline-none focus:border-[#8A7A6B] transition-colors f-sans"
-            />
-          </div>
-          <div className="flex items-center gap-2 bg-white border border-[#282828]/10 rounded-xl px-4 py-3">
-            <Filter size={14} className="text-[#737373]" />
-            <select
-              value={filter}
-              onChange={e => setFilter(e.target.value as any)}
-              className="bg-transparent text-sm text-[#282828] focus:outline-none f-sans cursor-pointer"
-            >
-              <option value="all">All Statuses</option>
-              {STATUSES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-[#282828]/5 overflow-hidden">
-          {/* Table Header */}
-          <div className="hidden md:flex items-center gap-4 px-6 py-4 border-b border-[#282828]/5 bg-[#FDFCFB]">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#737373] f-sans w-28">Order ID</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#737373] f-sans flex-grow">Customer</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#737373] f-sans w-32 text-right">Total</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#737373] f-sans w-24">Status</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#737373] f-sans w-24 text-right hidden md:block">Date</span>
-            <span className="w-4" />
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-24">
-              <div className="w-8 h-8 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
+    <div className="p-8 md:p-12 space-y-12 text-start f-sans">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
+         <div className="space-y-4">
+            <div className="bg-ikea-yellow inline-block px-4 py-1.5 skew-x-[-4deg]">
+              <span className="text-ikea-blue text-[11px] font-black uppercase tracking-[0.4em] skew-x-[4deg] inline-block">DEPLOYMENT LOGISTICS</span>
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-[#737373] font-serif text-xl">{search || filter !== 'all' ? 'No matching orders' : 'No orders yet'}</p>
-            </div>
-          ) : (
-            filtered.map(order => <OrderRow key={order.id} order={order} />)
-          )}
-        </div>
+            <h1 className="text-5xl md:text-7xl font-black text-ikea-black tracking-tighter uppercase">Order Command</h1>
+         </div>
+         <div className="bg-ikea-gray px-6 py-4 rounded-2xl border border-ikea-gray flex items-center gap-4">
+            <Calendar size={18} className="text-ikea-blue" />
+            <span className="text-[11px] font-black uppercase tracking-widest text-ikea-darkGray">Operational Queue: {orders.length} ACTIVE</span>
+         </div>
+      </header>
+
+      <div className="relative group">
+         <Search size={22} className="absolute left-10 top-1/2 -translate-y-1/2 text-ikea-darkGray opacity-40" />
+         <input 
+            type="text" 
+            placeholder="Filter by Order ID, Customer, or Status..." 
+            className="w-full bg-white border-4 border-ikea-gray rounded-[2.5rem] py-8 pl-24 pr-12 text-xl font-black outline-none focus:border-ikea-blue transition-all"
+         />
       </div>
-    </AdminLayout>
+
+      <main>
+         {loading ? (
+            <div className="py-40 flex justify-center"><div className="w-12 h-12 border-4 border-ikea-gray border-t-ikea-blue rounded-full animate-spin" /></div>
+         ) : (
+            <div className="bg-white rounded-[3.5rem] border border-ikea-gray overflow-hidden shadow-2xl">
+               <table className="w-full text-start">
+                  <thead className="bg-ikea-gray/30 border-b border-ikea-gray">
+                     <tr className="text-[10px] font-black text-ikea-blue uppercase tracking-widest">
+                        <th className="px-10 py-6">ORD-IDENTIFIER</th>
+                        <th className="px-10 py-6">RECIPIENT</th>
+                        <th className="px-10 py-6">LOGISTICS STATUS</th>
+                        <th className="px-10 py-6">TOTAL VALUE</th>
+                        <th className="px-10 py-6 text-center">COMMAND</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ikea-gray/50">
+                     {orders.map((o) => {
+                        const s = (statusConfig as any)[o.status || 'confirmed'] || statusConfig.confirmed;
+                        return (
+                           <tr key={o.id} className="hover:bg-ikea-gray/10 transition-colors group">
+                              <td className="px-10 py-8">
+                                 <p className="font-black text-sm text-ikea-blue flex items-center gap-2">#{o.id.toUpperCase()} <ArrowUpRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" /></p>
+                                 <p className="text-[10px] font-bold text-ikea-darkGray opacity-60 mt-1 uppercase">Captured: {new Date(o.date).toLocaleDateString()}</p>
+                              </td>
+                              <td className="px-10 py-8">
+                                 <div className="space-y-1">
+                                    <p className="font-black text-sm uppercase tracking-tight">{o.customer?.name}</p>
+                                    <div className="flex items-center gap-4 text-xs font-bold text-ikea-darkGray opacity-60">
+                                       <span className="flex items-center gap-1"><MapPin size={10} /> {o.customer?.city}</span>
+                                       <span className="flex items-center gap-1"><Phone size={10} /> {o.customer?.phone}</span>
+                                    </div>
+                                 </div>
+                              </td>
+                              <td className="px-10 py-8">
+                                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-current" style={{ color: s.color, backgroundColor: s.bg }}>
+                                    <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{s.text}</span>
+                                 </div>
+                              </td>
+                              <td className="px-10 py-8">
+                                 <p className="text-xl font-black text-ikea-black tracking-tighter">{o.total?.toLocaleString()} <span className="text-xs font-normal opacity-60">SAR</span></p>
+                              </td>
+                              <td className="px-10 py-8">
+                                 <div className="flex justify-center gap-3">
+                                    <Link to={`/admin/invoice/${o.id}`} className="p-4 rounded-xl bg-ikea-gray hover:bg-ikea-blue hover:text-white transition-all shadow-sm"><Eye size={18} /></Link>
+                                    <button onClick={() => window.print()} className="p-4 rounded-xl bg-ikea-gray hover:bg-ikea-black hover:text-white transition-all shadow-sm"><Printer size={18} /></button>
+                                 </div>
+                              </td>
+                           </tr>
+                        );
+                     })}
+                  </tbody>
+               </table>
+            </div>
+         )}
+      </main>
+    </div>
   );
 };
 

@@ -1,92 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { db, auth } from '../firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
+import { auth, db } from '../firebase';
 import {
   Package, ChevronDown, ChevronUp, ShoppingBag,
   CheckCircle2, Clock, Truck, MapPin, ArrowRight,
   FileText, Wifi, LogOut, User
 } from 'lucide-react';
-import { useLang } from '../App';
+import { useLang } from '../store/context/LangContext';
 
 const statusConfig = {
-  confirmed: {
-    color: 'bg-blue-50 text-blue-600 border-blue-100',
-    icon: CheckCircle2,
-    en: 'Confirmed', ar: 'مؤكد',
-  },
-  processing: {
-    color: 'bg-amber-50 text-amber-600 border-amber-100',
-    icon: Clock,
-    en: 'Processing', ar: 'قيد التجهيز',
-  },
-  shipped: {
-    color: 'bg-purple-50 text-purple-600 border-purple-100',
-    icon: Truck,
-    en: 'Shipped', ar: 'تم الشحن',
-  },
-  delivered: {
-    color: 'bg-green-50 text-green-600 border-green-100',
-    icon: MapPin,
-    en: 'Delivered', ar: 'تم التوصيل',
-  },
+  confirmed: { color: 'bg-ikea-blue text-white', icon: CheckCircle2, en: 'Confirmed', ar: 'مؤكد' },
+  processing: { color: 'bg-ikea-yellow text-ikea-blue', icon: Clock, en: 'Processing', ar: 'قيد التجهيز' },
+  shipped: { color: 'bg-ikea-blue text-white', icon: Truck, en: 'Shipped', ar: 'تم الشحن' },
+  delivered: { color: 'bg-green-600 text-white', icon: MapPin, en: 'Delivered', ar: 'تم التوصيل' },
 };
 
-const timelineSteps = ['confirmed', 'processing', 'shipped', 'delivered'] as const;
+const HeadphonesContact = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 14c0-4.4 3.6-8 8-8s8 3.6 8 8" /><path d="M21 14v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-1" /><path d="M16 14h2a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2z" /><path d="M6 14h2a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2z" />
+  </svg>
+);
 
 const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang }) => {
   const [expanded, setExpanded] = useState(false);
   const ar = lang === 'ar';
-  const statusKey = (order.status || 'confirmed') as keyof typeof statusConfig;
-  const status = statusConfig[statusKey] || statusConfig.confirmed;
+  const status = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.confirmed;
   const StatusIcon = status.icon;
-  const currentStep = timelineSteps.indexOf(statusKey as typeof timelineSteps[number]);
 
   const dateStr = new Date(order.date).toLocaleDateString(ar ? 'ar-SA' : 'en-US', {
     year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  const paymentLabel = (pm: string) => {
-    if (pm === 'cash') return ar ? 'عند الاستلام' : 'Cash on Delivery';
-    if (pm === 'card') return ar ? 'بطاقة ائتمان' : 'Credit Card';
-    return ar ? 'تحويل بنكي' : 'Bank Transfer';
-  };
-
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-[2rem] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[#282828]/5"
+      className="bg-white rounded-[2rem] border border-ikea-gray overflow-hidden shadow-sm hover:shadow-md transition-shadow mb-6"
     >
       <button
-        onClick={() => setExpanded(e => !e)}
-        className="w-full text-left flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 md:p-8 hover:bg-[#FDFCFB] transition-colors"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 hover:bg-ikea-gray/20 transition-colors"
       >
-        <div className="flex items-center gap-5">
-          <div className="w-12 h-12 rounded-full bg-[#F5F2EE] flex items-center justify-center flex-shrink-0">
-            <Package size={20} className="text-[#8A7A6B]" />
+        <div className="flex items-start gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-ikea-gray flex items-center justify-center text-ikea-blue flex-shrink-0">
+            <Package size={28} />
           </div>
-          <div className="text-left" dir={ar ? 'rtl' : 'ltr'}>
-            <p className="font-bold text-[#282828] f-sans text-sm tracking-wide">{order.id}</p>
-            <p className="text-[#737373] text-xs f-sans mt-0.5">{dateStr}</p>
+          <div className="text-start">
+            <p className="text-[11px] font-black uppercase tracking-widest text-ikea-darkGray mb-1">{ar ? 'معرف الطلب' : 'ORDER ID'}</p>
+            <p className="font-black text-ikea-black text-xl tracking-tight">{order.id}</p>
+            <p className="text-ikea-darkGray text-sm font-medium mt-1">{dateStr}</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border f-sans ${status.color}`}>
+
+        <div className="flex items-center gap-6 flex-wrap md:flex-nowrap w-full md:w-auto justify-between md:justify-end">
+          <span className={`inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full ${status.color}`}>
             <StatusIcon size={12} />
             {ar ? status.ar : status.en}
           </span>
-          <span className="text-[#737373] text-xs f-sans font-medium">
-            {order.items?.length || 0} {ar ? 'قطعة' : 'items'}
-          </span>
-          <span className="text-[#282828] font-bold font-serif text-lg">
-            {(order.total || 0).toLocaleString()} SAR
-          </span>
-          <div className="text-[#737373]">
-            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          <p className="text-2xl font-black text-ikea-black tracking-tighter">
+            <span className="text-sm font-normal mr-1">{ar ? 'ر.س' : 'SAR'}</span>
+            {(order.total || 0).toLocaleString()}
+          </p>
+          <div className={`p-3 rounded-full bg-ikea-gray text-ikea-black transition-transform ${expanded ? 'rotate-180' : ''}`}>
+             <ChevronDown size={20} />
           </div>
         </div>
       </button>
@@ -94,135 +71,50 @@ const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang })
       <AnimatePresence>
         {expanded && (
           <motion.div
-            key="details"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden"
+            className="overflow-hidden bg-ikea-gray/10"
           >
-            <div className="border-t border-[#282828]/5 px-6 md:px-8 pb-8 pt-6 space-y-8" dir={ar ? 'rtl' : 'ltr'}>
-
-              {/* Progress Timeline */}
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#282828] mb-5">
-                  {ar ? 'حالة الطلب' : 'Order Status'}
-                </p>
-                <div className="flex items-start relative">
-                  {timelineSteps.map((step, i) => {
-                    const s = statusConfig[step];
-                    const StepIcon = s.icon;
-                    const done = i <= currentStep;
-                    const active = i === currentStep;
-                    return (
-                      <div key={step} className="flex-1 flex flex-col items-center relative">
-                        {i < timelineSteps.length - 1 && (
-                          <div className={`absolute top-4 left-1/2 w-full h-[2px] ${done && i < currentStep ? 'bg-[#8A7A6B]' : 'bg-[#282828]/10'}`} />
-                        )}
-                        <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                          active ? 'border-[#8A7A6B] bg-[#8A7A6B] text-white scale-110 shadow-lg shadow-[#8A7A6B]/30'
-                            : done ? 'border-[#8A7A6B] bg-[#8A7A6B]/10 text-[#8A7A6B]'
-                            : 'border-[#282828]/10 bg-white text-[#282828]/20'
-                        }`}>
-                          <StepIcon size={14} />
+            <div className="p-8 space-y-8 border-t border-ikea-gray">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div className="bg-white rounded-3xl p-8 border border-ikea-gray">
+                  <h4 className="text-[11px] font-black uppercase tracking-widest text-ikea-darkGray mb-6">{ar ? 'المنتجات' : 'ITEMS'}</h4>
+                  <div className="space-y-4">
+                    {order.items?.map((item: any, i: number) => (
+                      <div key={i} className="flex justify-between items-center py-2 border-b border-ikea-gray last:border-0">
+                        <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 bg-ikea-gray rounded-xl overflow-hidden p-2">
+                             <img src={item.product?.images?.[0]} className="w-full h-full object-contain" alt="" />
+                           </div>
+                           <div>
+                              <p className="font-bold text-ikea-black text-sm">{item.product?.name?.[lang] || item.product?.name?.en}</p>
+                              <p className="text-xs text-ikea-darkGray">{ar ? 'الكمية' : 'Qty'}: {item.quantity}</p>
+                           </div>
                         </div>
-                        <p className={`mt-2 text-[9px] font-bold uppercase tracking-widest text-center ${
-                          active ? 'text-[#8A7A6B]' : done ? 'text-[#282828]/60' : 'text-[#282828]/20'
-                        }`}>
-                          {ar ? s.ar : s.en}
-                        </p>
+                        <p className="font-black text-sm">{(item.product?.price * item.quantity).toLocaleString()} SAR</p>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Items */}
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#282828] mb-4">
-                  {ar ? 'المنتجات' : 'Items'}
-                </p>
-                <div className="space-y-4">
-                  {(order.items || []).map((item: any, idx: number) => (
-                    <div key={idx} className="flex gap-4 items-center">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-[#F5F2EE] flex-shrink-0 border border-[#282828]/5">
-                        {item.product?.images?.[0] && (
-                          <img src={item.product.images[0]} alt="" className="w-full h-full object-cover" />
-                        )}
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <p className="text-[#282828] font-serif text-sm truncate">
-                          {item.product?.name?.[lang] || item.product?.name?.en || item.product?.name}
-                        </p>
-                        <p className="text-[#737373] text-xs f-sans mt-0.5 uppercase tracking-widest">
-                          {ar ? 'الكمية' : 'QTY'}: {item.quantity}
-                        </p>
-                      </div>
-                      <p className="text-[#282828] font-bold f-sans text-sm flex-shrink-0">
-                        {((item.product?.price || 0) * item.quantity).toLocaleString()} SAR
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Two-col: Customer + Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-[#F5F2EE] rounded-2xl p-6">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#282828] mb-4">
-                    {ar ? 'معلومات التوصيل' : 'Delivery Info'}
-                  </p>
-                  <div className="space-y-2 text-[#737373] text-sm f-sans">
-                    <p><span className="font-bold text-[#282828]">{ar ? 'الاسم:' : 'Name:'}</span> {order.customer?.name}</p>
-                    {order.customer?.companyName && (
-                      <p><span className="font-bold text-[#282828]">{ar ? 'الشركة:' : 'Company:'}</span> {order.customer.companyName}</p>
-                    )}
-                    <p><span className="font-bold text-[#282828]">{ar ? 'الهاتف:' : 'Phone:'}</span> {order.customer?.phone}</p>
-                    <p><span className="font-bold text-[#282828]">{ar ? 'العنوان:' : 'Address:'}</span> {order.customer?.address}, {order.customer?.city}</p>
-                    {order.customer?.notes && (
-                      <p><span className="font-bold text-[#282828]">{ar ? 'ملاحظات:' : 'Notes:'}</span> {order.customer.notes}</p>
-                    )}
+                    ))}
                   </div>
                 </div>
 
-                <div className="bg-[#F5F2EE] rounded-2xl p-6">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#282828] mb-4">
-                    {ar ? 'ملخص المبالغ' : 'Price Summary'}
-                  </p>
-                  <div className="space-y-2 text-sm f-sans">
-                    <div className="flex justify-between text-[#737373]">
-                      <span>{ar ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                      <span>{(order.subtotal || 0).toLocaleString()} SAR</span>
-                    </div>
-                    <div className="flex justify-between text-[#737373]">
-                      <span>{ar ? 'التوصيل' : 'Delivery'}</span>
-                      <span className={order.delivery === 0 ? 'text-[#8A7A6B] font-bold' : ''}>
-                        {order.delivery === 0 ? (ar ? 'مجاني' : 'Free') : `${order.delivery} SAR`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-[#282828] font-bold text-base font-serif pt-2 border-t border-[#282828]/10 mt-2">
-                      <span>{ar ? 'الإجمالي' : 'Total'}</span>
-                      <span>{(order.total || 0).toLocaleString()} SAR</span>
-                    </div>
-                    <div className="flex justify-between text-[#737373] text-xs pt-1">
-                      <span>{ar ? 'طريقة الدفع' : 'Payment'}</span>
-                      <span className="font-bold text-[#282828]">{paymentLabel(order.paymentMethod)}</span>
-                    </div>
-                  </div>
+                <div className="bg-ikea-blue text-white rounded-3xl p-8 flex flex-col justify-between">
+                   <div>
+                      <h4 className="text-[11px] font-black uppercase tracking-widest text-ikea-yellow mb-4">{ar ? 'التوصيل' : 'SHIPPING'}</h4>
+                      <p className="font-bold text-lg mb-1">{order.customer?.name}</p>
+                      <p className="opacity-70 text-sm leading-relaxed">{order.customer?.address}, {order.customer?.city}</p>
+                      <p className="opacity-70 text-sm mt-1">{order.customer?.phone}</p>
+                   </div>
+                   <div className="mt-8 flex gap-4">
+                      <Link to={`/invoice/${order.id}`} className="flex-1 bg-white text-ikea-blue py-3 rounded-full text-[11px] font-black uppercase text-center hover:bg-ikea-yellow transition-colors">
+                        {ar ? 'الفاتورة' : 'Invoice'}
+                      </Link>
+                      <Link to="/track" className="flex-1 bg-white/10 text-white border border-white/20 py-3 rounded-full text-[11px] font-black uppercase text-center hover:bg-white/20 transition-colors">
+                        {ar ? 'تتبع' : 'Track'}
+                      </Link>
+                   </div>
                 </div>
               </div>
-
-              {/* Invoice link */}
-              <div className="flex justify-end">
-                <Link
-                  to={`/invoice/${order.id}`}
-                  className="inline-flex items-center gap-2 bg-[#282828] text-white px-6 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-[#8A7A6B] transition-all f-sans"
-                >
-                  <FileText size={13} />
-                  {ar ? 'طباعة الفاتورة' : 'Print Invoice'}
-                </Link>
-              </div>
-
             </div>
           </motion.div>
         )}
@@ -234,196 +126,98 @@ const OrderCard: React.FC<{ order: any; lang: 'en' | 'ar' }> = ({ order, lang })
 export const Orders: React.FC = () => {
   const { lang } = useLang();
   const ar = lang === 'ar';
-  const navigate = useNavigate();
-
-  const [user, setUser] = useState<any>(null);
-  const [authChecked, setAuthChecked] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
-  // ── Auth state ──
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => {
+    const unsubAuth = auth.onAuthStateChanged(u => {
       setUser(u);
-      setAuthChecked(true);
-      if (!u) setLoading(false);
+      if (u) {
+        const q = query(collection(db, 'orders'), where('userId', '==', u.uid));
+        const unsubOrders = onSnapshot(q, snap => {
+          const fetched = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          fetched.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          setOrders(fetched);
+          setLoading(false);
+        });
+        return () => unsubOrders();
+      } else {
+        setLoading(false);
+      }
     });
-    return () => unsub();
+    return () => unsubAuth();
   }, []);
 
-  // ── Real-time orders by UID ──
-  useEffect(() => {
-    if (!authChecked || !user) return;
-    const q = query(
-      collection(db, 'orders'),
-      where('userId', '==', user.uid)
-    );
-    const unsub = onSnapshot(q, snap => {
-      const fetched = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      fetched.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setOrders(fetched);
-      setLoading(false);
-    }, () => setLoading(false));
-    return () => unsub();
-  }, [user, authChecked]);
+  if (loading) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+       <div className="w-12 h-12 border-4 border-ikea-gray border-t-ikea-blue rounded-full animate-spin" />
+    </div>
+  );
 
-  const handleSignOut = async () => {
-    await signOut(auth);
-    navigate('/checkout');
-  };
+  if (!user) return (
+    <div className="min-h-screen bg-ikea-gray/30 flex items-center justify-center px-6">
+       <div className="max-w-md w-full bg-white rounded-[3rem] p-12 text-center shadow-2xl">
+          <div className="w-20 h-20 bg-ikea-gray rounded-full flex items-center justify-center mx-auto mb-8 text-ikea-blue/20">
+             <User size={40} />
+          </div>
+          <h2 className="text-3xl font-black text-ikea-black mb-4 tracking-tighter">{ar ? 'سجل الدخول' : 'Access Your Orders'}</h2>
+          <p className="text-ikea-darkGray mb-10 leading-relaxed font-medium">
+             {ar ? 'يرجى تسجيل الدخول لعرض تاريخ طلباتك وتتبع شحناتك الحالية.' : 'Please authenticate to view your complete order history and monitor active shipments.'}
+          </p>
+          <button className="w-full bg-ikea-blue text-white py-5 rounded-full font-black uppercase tracking-widest hover:bg-[#00478b] transition-all shadow-xl">
+            {ar ? 'تسجيل الدخول' : 'AUTHENTICATE'}
+          </button>
+       </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] f-sans" dir={ar ? 'rtl' : 'ltr'}>
-      {/* Page Header */}
-      <div className="bg-white border-b border-[#282828]/5">
-        <div className="max-w-[1100px] mx-auto px-6 md:px-12 py-16 md:py-20">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <span className="text-[#8A7A6B] text-[10px] font-bold uppercase tracking-[0.3em] block mb-4">
-                {ar ? 'حسابي' : 'My Account'}
-              </span>
-              <h1 className="font-serif text-[#282828] text-4xl md:text-5xl leading-tight">
-                {ar ? 'طلباتي' : 'My Orders'}
-              </h1>
-              {user && (
-                <p className="text-[#737373] text-sm mt-3 f-sans flex items-center gap-2">
-                  <User size={13} />
-                  {user.email}
-                </p>
-              )}
-            </div>
-            {user && (
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 text-[#737373] text-[11px] font-bold uppercase tracking-widest hover:text-[#282828] transition-colors f-sans mt-2"
-              >
-                <LogOut size={14} />
-                {ar ? 'تسجيل خروج' : 'Sign Out'}
-              </button>
-            )}
+    <div className="min-h-screen bg-white f-sans" dir={ar ? 'rtl' : 'ltr'}>
+       <header className="bg-ikea-gray/30 pt-32 pb-20 md:pt-48 md:pb-40 px-6 md:px-12">
+          <div className="container mx-auto max-w-[1440px]">
+             <span className="bg-ikea-blue text-white px-4 py-1.5 text-[11px] font-black uppercase tracking-widest mb-8 inline-block">
+               {ar ? 'الأرشيف' : 'ORDER ARCHIVE'}
+             </span>
+             <h1 className="text-6xl md:text-9xl font-black text-ikea-black tracking-tighter leading-[0.85] mb-12">
+               {ar ? <>سجل<br /><span className="text-ikea-blue">طلباتك</span></> : <>YOUR ORDER<br /><span className="text-ikea-blue">HISTORY</span></>}
+             </h1>
           </div>
+       </header>
 
-          {user && (
-            <div className="flex items-center gap-2 mt-4">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs text-[#737373] f-sans">
-                {ar ? 'متزامن مباشرةً — تتحدث حالة الطلب فوراً' : 'Live sync — order status updates instantly'}
-              </span>
-              <Wifi size={12} className="text-green-400" />
-            </div>
+       <main className="container mx-auto max-w-[1200px] px-6 py-24">
+          {orders.length === 0 ? (
+             <div className="text-center py-32 bg-ikea-gray/20 rounded-[4rem] border-4 border-dashed border-ikea-gray">
+                <ShoppingBag size={64} className="mx-auto mb-8 text-ikea-darkGray opacity-20" />
+                <h3 className="text-3xl font-black text-ikea-black tracking-tighter mb-4">{ar ? 'لا يوجد طلبات سابقة' : 'NO ORDERS YET'}</h3>
+                <Link to="/store" className="text-ikea-blue font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 hover:gap-4 transition-all">
+                  {ar ? 'ابدأ التسوق الآن' : 'START SHOPPING NOW'} <ArrowRight size={20} className={ar ? 'rotate-180' : ''} />
+                </Link>
+             </div>
+          ) : (
+             <div className="grid grid-cols-1 gap-6">
+                {orders.map(o => <OrderCard key={o.id} order={o} lang={lang} />)}
+             </div>
           )}
-        </div>
-      </div>
+       </main>
 
-      <div className="max-w-[1100px] mx-auto px-6 md:px-12 py-16">
-
-        {/* ── Not signed in ── */}
-        {authChecked && !user && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-center py-24"
-          >
-            <div className="w-24 h-24 rounded-full bg-[#F5F2EE] flex items-center justify-center mx-auto mb-8">
-              <User size={36} className="text-[#8A7A6B]/40" />
-            </div>
-            <h3 className="font-serif text-[#282828] text-3xl mb-4">
-              {ar ? 'سجّل دخولك لرؤية طلباتك' : 'Sign in to see your orders'}
-            </h3>
-            <p className="text-[#737373] text-base f-sans max-w-md mx-auto leading-relaxed mb-10">
-              {ar
-                ? 'حسابك يتيح لك متابعة جميع طلباتك من أي جهاز وفي أي وقت.'
-                : 'Your account lets you track all your orders from any device, anytime.'}
-            </p>
-            <Link
-              to="/checkout"
-              className="inline-flex items-center gap-3 bg-[#282828] text-white px-10 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-[#8A7A6B] transition-all f-sans"
-            >
-              <Package size={14} />
-              {ar ? 'تسجيل الدخول / إنشاء حساب' : 'Sign In / Create Account'}
-              <ArrowRight size={14} className={ar ? 'rotate-180' : ''} />
-            </Link>
-          </motion.div>
-        )}
-
-        {/* ── Loading ── */}
-        {loading && user && (
-          <div className="flex items-center justify-center py-40">
-            <div className="w-10 h-10 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
+       {/* Support Section */}
+       <section className="bg-ikea-black text-white py-32 mt-24">
+          <div className="container mx-auto px-6 max-w-4xl text-center">
+             <div className="w-16 h-16 bg-ikea-yellow rounded-full flex items-center justify-center text-ikea-blue mx-auto mb-10 shadow-2xl">
+                <HeadphonesContact size={32} />
+             </div>
+             <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-8 leading-none">
+                {ar ? 'هل تحتاج لمساعدة في طلبك؟' : 'NEED HELP WITH AN ORDER?'}
+             </h2>
+             <p className="text-white/60 text-lg mb-12 leading-relaxed font-medium">
+                {ar ? 'مركز الدعم الفني لدينا جاهز لمساعدتك في أي استفسار يخص الشحن أو الجودة.' : 'Our strategic support center is standing by to assist with logistics or quality assurance inquiries.'}
+             </p>
+             <Link to="/contact" className="inline-flex items-center gap-4 bg-white text-ikea-blue px-12 py-5 rounded-full font-black uppercase tracking-widest hover:bg-ikea-yellow transition-all">
+                {ar ? 'تواصل مع الدعم' : 'CONTACT SUPPORT'} <Wifi size={18} />
+             </Link>
           </div>
-        )}
-
-        {/* ── Empty ── */}
-        {!loading && user && orders.length === 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-center py-28"
-          >
-            <div className="w-24 h-24 rounded-full bg-[#F5F2EE] flex items-center justify-center mx-auto mb-8">
-              <ShoppingBag size={36} className="text-[#8A7A6B]/40" />
-            </div>
-            <h3 className="font-serif text-[#282828] text-3xl mb-4">
-              {ar ? 'لا توجد طلبات بعد' : 'No orders yet'}
-            </h3>
-            <p className="text-[#737373] text-base f-sans max-w-md mx-auto leading-relaxed mb-10">
-              {ar
-                ? 'ابدأ تسوقك من مجموعتنا الفاخرة'
-                : 'Start shopping our luxury collection of furniture and décor'}
-            </p>
-            <Link
-              to="/store"
-              className="inline-flex items-center gap-3 bg-[#282828] text-white px-10 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-[#8A7A6B] transition-all f-sans"
-            >
-              <ShoppingBag size={14} />
-              {ar ? 'تصفح المتجر' : 'Browse Store'}
-              <ArrowRight size={14} className={ar ? 'rotate-180' : ''} />
-            </Link>
-          </motion.div>
-        )}
-
-        {/* ── Orders list ── */}
-        {!loading && user && orders.length > 0 && (
-          <>
-            {/* Stats Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-              {[
-                { label: { en: 'Total Orders', ar: 'إجمالي الطلبات' }, value: orders.length, unit: '' },
-                { label: { en: 'Total Spent', ar: 'إجمالي الإنفاق' }, value: orders.reduce((s: number, o: any) => s + (o.total || 0), 0).toLocaleString(), unit: 'SAR' },
-                { label: { en: 'Delivered', ar: 'تم التوصيل' }, value: orders.filter((o: any) => o.status === 'delivered').length, unit: '' },
-                { label: { en: 'In Progress', ar: 'قيد التنفيذ' }, value: orders.filter((o: any) => o.status !== 'delivered').length, unit: '' },
-              ].map((stat, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  className="bg-white rounded-2xl p-5 border border-[#282828]/5 shadow-sm"
-                >
-                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#737373] mb-2 f-sans">
-                    {ar ? stat.label.ar : stat.label.en}
-                  </p>
-                  <p className="font-serif text-[#282828] text-2xl">
-                    {stat.value}
-                    {stat.unit && <span className="text-sm text-[#8A7A6B] f-sans font-bold ml-1">{stat.unit}</span>}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Orders List */}
-            <div className="space-y-5">
-              {orders.map((order: any) => (
-                <OrderCard key={order.id} order={order} lang={lang} />
-              ))}
-            </div>
-
-            {/* Continue Shopping */}
-            <div className="text-center mt-12">
-              <Link to="/store"
-                className="inline-flex items-center gap-3 text-[#8A7A6B] text-[11px] font-bold uppercase tracking-[0.2em] hover:text-[#282828] transition-colors f-sans"
-              >
-                <ShoppingBag size={14} />
-                {ar ? 'مواصلة التسوق' : 'Continue Shopping'}
-                <ArrowRight size={14} className={ar ? 'rotate-180' : ''} />
-              </Link>
-            </div>
-          </>
-        )}
-      </div>
+       </section>
     </div>
   );
 };

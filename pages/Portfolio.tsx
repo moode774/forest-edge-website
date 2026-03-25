@@ -1,160 +1,93 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { useLang } from '../App';
-import { translations } from '../content/translations';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-
-/* =========================================
-   ANIMATION VARIANTS
-   ========================================= */
-const fadeUp = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] } }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
-};
-
-/* --- Project Card with Parallax --- */
-const ProjectCard = ({ project, index, lang }: any) => {
-   const cardRef = useRef(null);
-   const { scrollYProgress } = useScroll({ target: cardRef, offset: ["start end", "end start"] });
-   const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
-
-   return (
-      <motion.div 
-         ref={cardRef}
-         variants={fadeUp} 
-         className={`group relative ${project.span}`}
-      >
-         <div className={`w-full overflow-hidden bg-[#F5F2EE] relative ${project.aspect} ${project.rounded}`}>
-            <motion.img
-               style={{ y }}
-               src={project.img}
-               alt={project.title}
-               className="w-full h-[120%] object-cover absolute top-0 left-0 transition-transform duration-[2s] ease-out group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center transform translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                  <ArrowUpRight size={28} className={`text-[#282828] ${lang === 'ar' ? '-scale-x-100' : ''}`} />
-               </div>
-            </div>
-         </div>
-
-         <div className="mt-8 flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
-            <div>
-               <div className="flex items-center gap-4 mb-3">
-                  <span className="text-[#8A7A6B] text-[10px] font-bold uppercase tracking-[0.2em] font-sans">{project.type}</span>
-                  <span className="w-8 h-[1px] bg-[#8A7A6B]/50"></span>
-                  <span className="text-[#737373] text-[10px] font-mono">PRJ_{String(index + 1).padStart(2, '0')}</span>
-               </div>
-               <h3 className="text-3xl md:text-4xl font-serif text-[#282828] group-hover:text-[#8A7A6B] transition-colors duration-300">
-                  {project.title}
-               </h3>
-            </div>
-            <div className="md:text-right">
-               <p className="text-[#737373] font-medium text-sm border border-[#282828]/10 px-4 py-2 rounded-full inline-block font-sans">
-                  {project.loc}
-               </p>
-            </div>
-         </div>
-      </motion.div>
-   );
-};
+import React, { useState, useEffect } from 'react';
+import { useLang } from '../store/context/LangContext';
+import { ArrowUpRight, LayoutGrid, Box } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const Portfolio: React.FC = () => {
    const { lang } = useLang();
-   const t = translations[lang] || {};
-   const portfolioT = t.portfolio || { title: 'Our Portfolio' };
-   const [activeFilter, setActiveFilter] = useState(lang === 'ar' ? 'كل الأعمال' : 'All Works');
+   const ar = lang === 'ar';
+   const [activeFilter, setActiveFilter] = useState(ar ? 'الكل' : 'All');
 
    useEffect(() => {
       window.scrollTo(0, 0);
    }, []);
 
+   const filters = ar ? ['الكل', 'سكني', 'تجاري', 'مخصص'] : ['All', 'Residential', 'Commercial', 'Bespoke'];
    const projects = [
-      { id: 1, title: "Royal Suite Renovation", loc: "Riyadh", img: "https://images.unsplash.com/photo-1616594039964-408e490051e0?auto=format&fit=crop&w=1600&q=80", type: "Residential", span: "col-span-1 md:col-span-12", aspect: "aspect-[4/3] md:aspect-[21/9]", rounded: "rounded-[2rem] md:rounded-[3rem]" },
-      { id: 2, title: "Luxury Villa Woodworks", loc: "Jeddah", img: "https://images.unsplash.com/photo-1600596542815-6ad4c1277855?auto=format&fit=crop&w=1200&q=80", type: "Private", span: "col-span-1 md:col-span-7", aspect: "aspect-[4/5] md:aspect-[4/3]", rounded: "rounded-[2rem]" },
-      { id: 3, title: "Corporate HQ", loc: "Dubai", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80", type: "Commercial", span: "col-span-1 md:col-span-5", aspect: "aspect-[4/5] md:aspect-[3/4]", rounded: "rounded-[2rem]" },
-      { id: 4, title: "Private Majlis", loc: "Dammam", img: "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1400&q=80", type: "Bespoke", span: "col-span-1 md:col-span-10 md:col-start-2", aspect: "aspect-[4/3] md:aspect-[16/9]", rounded: "rounded-[2rem] md:rounded-[3rem]" },
+      { id: 1, title: ar ? "تجديد الجناح الملكي" : "ROYAL SUITE RECON", loc: "RIYADH", img: "https://images.unsplash.com/photo-1616594039964-408e490051e0?auto=format&fit=crop&w=1600&q=80", type: ar ? "سكني" : "Residential" },
+      { id: 2, title: ar ? "أعمال خشبية لفيلا فاخرة" : "LUXURY VILLA ARCHIVE", loc: "JEDDAH", img: "https://images.unsplash.com/photo-1600596542815-6ad4c1277855?auto=format&fit=crop&w=1200&q=80", type: ar ? "سكني" : "Residential" },
+      { id: 3, title: ar ? "المقر الرئيسي للشركة" : "CORPORATE TERMINAL", loc: "DUBAI", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80", type: ar ? "تجاري" : "Commercial" },
+      { id: 4, title: ar ? "مجلس خاص" : "PRIVATE MAJLIS UNIT", loc: "DAMMAM", img: "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1400&q=80", type: ar ? "مخصص" : "Bespoke" },
    ];
 
-   const filters = lang === 'ar' 
-      ? ['كل الأعمال', 'سكني', 'تجاري', 'مخصص']
-      : ['All Works', 'Residential', 'Commercial', 'Bespoke'];
+   const filteredProjects = activeFilter === (ar ? 'الكل' : 'All') ? projects : projects.filter(p => p.type === activeFilter);
 
    return (
-      <div className="bg-[#FDFCFB] min-h-screen pb-32">
-         {/* Header Area */}
-         <div className="px-6 relative">
-            <div className="absolute top-10 left-[10%] w-[300px] h-[300px] bg-[#F5F2EE] rounded-full filter blur-[100px] opacity-60 -z-10" />
-            
-            <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="container mx-auto max-w-[1400px] pt-24 pb-20 text-center md:text-left rtl:md:text-right">
-               <motion.div variants={fadeUp} className="inline-flex items-center gap-3 mb-8">
-                  <div className="w-2 h-2 bg-[#8A7A6B] rounded-full animate-pulse"></div>
-                  <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#8A7A6B] font-sans">Archive</span>
-               </motion.div>
-               
-               <div className="flex flex-col md:flex-row justify-between items-end gap-10">
-                  <motion.h1 variants={fadeUp} className="text-6xl md:text-8xl lg:text-[7.5rem] font-serif tracking-tight text-[#282828] leading-[0.9]">
-                     {portfolioT.title.split(' ')[0]} <br/>
-                     <span className="italic font-light text-[#8A7A6B]">{portfolioT.title.split(' ').slice(1).join(' ')}</span>
-                  </motion.h1>
-                  
-                  <motion.div variants={fadeUp} className="max-w-xs md:pb-6 text-center md:text-left rtl:md:text-right">
-                     <p className="text-[#737373] text-lg font-light leading-relaxed font-sans">
-                        {lang === 'ar' 
-                           ? 'مجموعة مختارة بعناية من أفضل أعمالنا المعمارية وتصميماتنا الداخلية في المنطقة.'
-                           : 'A carefully curated selection of our finest architectural and interior creations across the region.'}
-                     </p>
-                  </motion.div>
+      <div className="bg-white min-h-screen pb-32 f-sans overflow-hidden" dir={ar ? 'rtl' : 'ltr'}>
+         <header className="bg-ikea-gray/30 pt-32 pb-20 md:pt-48 md:pb-40 px-6 md:px-12 relative overflow-hidden">
+            <div className="container mx-auto px-6 max-w-[1440px] relative z-10 text-start">
+               <div className="bg-ikea-blue inline-block px-4 py-1.5 mb-8 skew-x-[-4deg]">
+                 <span className="text-white text-[11px] font-black uppercase tracking-[0.4em] skew-x-[4deg] inline-block">
+                   {ar ? 'سجل الإنجازات' : 'PROJECT ARCHIVE'}
+                 </span>
                </div>
-            </motion.div>
+               <h1 className="text-6xl md:text-[9rem] font-black text-ikea-black tracking-tighter leading-[0.8] mb-12">
+                 {ar ? <>معرض<br /><span className="text-ikea-blue">المشاريع</span></> : <>VISUAL<br /><span className="text-ikea-blue">INVENTORY</span></>}
+               </h1>
+            </div>
+         </header>
+
+         <div className="sticky top-[72px] md:top-[80px] z-30 bg-white/80 backdrop-blur-xl border-b border-ikea-gray px-6 md:px-12 py-6">
+            <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-8">
+               <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2">
+                  {filters.map((f, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveFilter(f)}
+                      className={`px-10 py-4 rounded-full text-[13px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap shadow-sm ${
+                        activeFilter === f ? 'bg-ikea-blue text-white' : 'bg-ikea-gray text-ikea-darkGray hover:bg-white'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+               </div>
+               <div className="hidden md:flex items-center gap-6 text-end">
+                  <p className="text-[10px] font-black text-ikea-blue uppercase tracking-widest">{filteredProjects.length} UNITS</p>
+                  <LayoutGrid size={24} className="text-ikea-blue" />
+               </div>
+            </div>
          </div>
 
-         {/* System Filters */}
-         <motion.div 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
-            className="container mx-auto px-6 max-w-[1400px] mb-20"
-         >
-            <div className="flex flex-wrap gap-4 border-b border-[#282828]/10 pb-8">
-               {filters.map((filter, idx) => (
-                  <button 
-                     key={idx} 
-                     onClick={() => setActiveFilter(filter)}
-                     className={`text-[10px] font-bold uppercase tracking-[0.2em] px-8 py-3.5 rounded-full transition-all duration-300 font-sans ${activeFilter === filter ? 'bg-[#282828] text-white' : 'bg-transparent text-[#737373] hover:text-[#282828] hover:bg-[#F5F2EE]'}`}
+         <main className="container mx-auto px-6 max-w-[1440px] py-24">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-32">
+               {filteredProjects.map((project, idx) => (
+                  <motion.div 
+                    key={project.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="group"
                   >
-                     {filter}
-                  </button>
+                    <div className="aspect-[16/10] bg-ikea-gray rounded-[3rem] overflow-hidden relative shadow-2xl border-4 border-ikea-gray">
+                       <img src={project.img} alt="" className="w-full h-full object-cover transition-transform duration-[3s] group-hover:scale-110" />
+                       <div className="absolute top-10 left-10 md:top-12 md:left-12 bg-white/95 backdrop-blur-md px-6 py-3 rounded-2xl shadow-xl skew-x-[-6deg]">
+                          <span className="text-[12px] font-black uppercase tracking-[0.3em] text-ikea-blue skew-x-[6deg] inline-block">{project.type}</span>
+                       </div>
+                    </div>
+                    <div className="mt-12 flex items-start justify-between gap-10 text-start">
+                       <div>
+                          <h3 className="text-4xl md:text-5xl font-black text-ikea-black tracking-tighter mb-4 group-hover:text-ikea-blue transition-colors uppercase leading-none">{project.title}</h3>
+                          <p className="text-ikea-darkGray font-black uppercase tracking-[0.4em] text-[11px] opacity-60">{project.loc} // SECTOR {idx + 10}</p>
+                       </div>
+                       <div className="w-20 h-20 bg-ikea-gray rounded-full flex items-center justify-center text-ikea-black group-hover:bg-ikea-blue group-hover:text-white transition-all transform group-hover:rotate-45 shadow-xl flex-shrink-0">
+                          <ArrowUpRight size={32} />
+                       </div>
+                    </div>
+                  </motion.div>
                ))}
             </div>
-         </motion.div>
-
-         {/* The Editorial Grid */}
-         <div className="container mx-auto px-6 max-w-[1400px]">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-y-32 md:gap-x-12 lg:gap-x-20">
-               {projects.map((project, idx) => (
-                  <ProjectCard key={project.id} project={project} index={idx} lang={lang} />
-               ))}
-            </div>
-         </div>
-
-         {/* Call to Action */}
-         <motion.div 
-            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-            className="container mx-auto px-6 max-w-[1000px] text-center mt-48"
-         >
-            <h2 className="text-4xl md:text-7xl font-serif text-[#282828] mb-12 leading-tight">
-               {lang === 'ar' ? <>هل أنت جاهز لبدء <br/><span className="italic text-[#8A7A6B]">مشروعك الخاص؟</span></> : <>Ready to start <br/><span className="italic text-[#8A7A6B]">your project?</span></>}
-            </h2>
-            <Link to="/contact" className="inline-flex items-center gap-5 bg-[#282828] text-white px-12 py-6 rounded-full hover:bg-[#8A7A6B] transition-all duration-500 shadow-2xl group">
-               <span className="text-[11px] font-bold uppercase tracking-[0.25em] font-sans">{lang === 'ar' ? 'تواصل معنا' : 'Get in Touch'}</span>
-               <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform rtl:group-hover:-translate-x-2" />
-            </Link>
-         </motion.div>
+         </main>
       </div>
    );
 };

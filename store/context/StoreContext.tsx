@@ -19,6 +19,7 @@ interface StoreContextType {
   placeOrder: (customer: OrderCustomer, paymentMethod: Order['paymentMethod']) => Promise<Order>;
   cartCount: number;
   cartTotal: number;
+  total: number;
 }
 
 const StoreContext = createContext<StoreContextType | null>(null);
@@ -48,15 +49,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
   const [cartOpen, setCartOpen] = useState(false);
 
-  // ── Load products from Firestore (real-time) ──
+  // ── Load products from Firestore (real-time) with Local Fallback ──
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'products'), (snap) => {
       const fetched: StoreProduct[] = snap.docs.map(d => ({
         id: d.id,
-        ...(d.data() as Omit<StoreProduct, 'id'>),
+        ...(d.data() as Omit<StoreProduct, 'id'>)
       }));
-      setProducts(fetched);
-      setProductsLoading(false);
+      
+      // Load local seeds
+      import('../data/storeProducts').then(({ storeProducts }) => {
+        // Merge: Use Firestore primarily, but fill with seeds for IDs that don't exist
+        const merged = [...fetched];
+        storeProducts.forEach(sp => {
+           if (!merged.find(m => m.id === sp.id)) {
+              merged.push(sp);
+           }
+        });
+        setProducts(merged);
+        setProductsLoading(false);
+      });
     }, () => {
       setProductsLoading(false);
     });
@@ -195,6 +207,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       cart, orders, products, productsLoading,
       cartOpen, addToCart, removeFromCart, updateQty,
       clearCart, setCartOpen, placeOrder, cartCount, cartTotal,
+      total: cartTotal,
     }}>
       {children}
     </StoreContext.Provider>

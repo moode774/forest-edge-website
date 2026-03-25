@@ -1,213 +1,123 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { 
+  Plus, Search, Edit2, Trash2, Globe, 
+  Package, LayoutGrid, List, SlidersHorizontal, ArrowUpRight
+} from 'lucide-react';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { AdminLayout } from './AdminLayout';
-import { Plus, Pencil, Trash2, Search, Star, AlertTriangle, Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-export const AdminProducts: React.FC = () => {
+
+const AdminProducts: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [search,   setSearch]   = useState('');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [toast,    setToast]    = useState('');
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<'grid' | 'list'>('list');
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'products'), snap => {
+    const q = query(collection(db, 'products'), orderBy('category'));
+    const unsub = onSnapshot(q, snap => {
       setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
-    }, () => setLoading(false));
+    });
     return () => unsub();
   }, []);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(''), 3000);
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'products', id));
-      showToast('🗑️ Product deleted');
-    } catch {
-      showToast('❌ Delete failed');
-    } finally {
-      setDeleteId(null);
-    }
-  };
-
-  const filtered = products.filter(p =>
-    !search ||
-    p.name?.en?.toLowerCase().includes(search.toLowerCase()) ||
-    p.name?.ar?.includes(search) ||
-    p.category?.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
-    <AdminLayout>
-      <div className="p-6 md:p-10">
+    <div className="p-8 md:p-12 space-y-12 text-start f-sans">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
+         <div className="space-y-4">
+            <div className="bg-ikea-blue inline-block px-4 py-1.5 skew-x-[-4deg]">
+              <span className="text-white text-[11px] font-black uppercase tracking-[0.4em] skew-x-[4deg] inline-block">PRODUCTION INVENTORY</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-ikea-black tracking-tighter uppercase">Product Registry</h1>
+         </div>
+         <div className="flex gap-4">
+            <div className="bg-ikea-gray rounded-2xl flex p-1 border border-ikea-gray">
+               <button onClick={() => setView('grid')} className={`p-3 rounded-xl transition-all ${view === 'grid' ? 'bg-white shadow-md text-ikea-blue' : 'text-ikea-darkGray hover:text-ikea-blue'}`}><LayoutGrid size={20} /></button>
+               <button onClick={() => setView('list')} className={`p-3 rounded-xl transition-all ${view === 'list' ? 'bg-white shadow-md text-ikea-blue' : 'text-ikea-darkGray hover:text-ikea-blue'}`}><List size={20} /></button>
+            </div>
+            <button className="bg-ikea-blue text-white px-10 py-5 rounded-full font-black uppercase tracking-widest hover:bg-[#00478b] transition-all flex items-center gap-4 shadow-xl shadow-ikea-blue/10">
+               <Plus size={20} /> CREATE ENTRY
+            </button>
+         </div>
+      </header>
 
-        {/* Toast */}
-        <AnimatePresence>
-          {toast && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-              className="fixed top-6 right-6 z-50 bg-[#1C1C1A] text-white px-5 py-3.5 rounded-xl shadow-2xl text-sm f-sans font-medium"
-            >
-              {toast}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Delete Confirm Modal */}
-        <AnimatePresence>
-          {deleteId && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-              onClick={() => setDeleteId(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl"
-                onClick={e => e.stopPropagation()}
-              >
-                <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                  <AlertTriangle size={20} className="text-red-500" />
-                </div>
-                <h3 className="font-serif text-[#282828] text-xl text-center mb-2">Delete Product?</h3>
-                <p className="text-[#737373] text-sm text-center mb-7 f-sans">This action cannot be undone.</p>
-                <div className="flex gap-3">
-                  <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-[#282828]/10 text-[#282828] text-sm font-bold f-sans hover:bg-[#F5F2EE] transition-colors">
-                    Cancel
-                  </button>
-                  <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-bold f-sans hover:bg-red-600 transition-colors">
-                    Delete
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-serif text-[#282828] text-3xl">Products</h1>
-            <p className="text-[#737373] text-sm mt-1 f-sans">{products.length} products in database</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/admin/products/new"
-              className="flex items-center gap-2 bg-[#282828] text-white px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-[#8A7A6B] transition-all f-sans"
-            >
-              <Plus size={14} />
-              Add Product
-            </Link>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#737373]" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search products..."
-            className="w-full pl-11 pr-4 py-3 bg-white border border-[#282828]/10 rounded-xl text-sm text-[#282828] focus:outline-none focus:border-[#8A7A6B] transition-colors f-sans max-w-md"
-          />
-        </div>
-
-        {/* Products Grid */}
-        {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="w-10 h-10 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-2xl border border-[#282828]/5">
-            <p className="font-serif text-[#282828] text-2xl mb-3">{search ? 'No results found' : 'No products yet'}</p>
-            {!search && (
-              <p className="text-[#737373] text-sm f-sans mb-6">
-                Add your first product using the button above.
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#282828]/5 group"
-              >
-                {/* Image */}
-                <div className="relative h-48 bg-[#F5F2EE] overflow-hidden">
-                  {product.images?.[0] ? (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name?.en}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#282828]/20">
-                      <Package size={32} />
-                    </div>
-                  )}
-                  {/* Actions Overlay */}
-                  <div className="absolute inset-0 bg-[#1C1C1A]/0 group-hover:bg-[#1C1C1A]/40 transition-all duration-300 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                    <Link
-                      to={`/admin/products/edit/${product.id}`}
-                      className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#8A7A6B] hover:text-white transition-colors text-[#282828]"
-                    >
-                      <Pencil size={14} />
-                    </Link>
-                    <button
-                      onClick={() => setDeleteId(product.id)}
-                      className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-colors text-[#282828]"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                  {/* Badges */}
-                  <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                    {product.featured && (
-                      <span className="flex items-center gap-1 bg-amber-400 text-white text-[9px] font-bold px-2 py-1 rounded-full f-sans uppercase tracking-wide">
-                        <Star size={9} fill="white" /> Featured
-                      </span>
-                    )}
-                    {!product.inStock && (
-                      <span className="bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded-full f-sans uppercase tracking-wide">
-                        Out of Stock
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-4">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-[#8A7A6B] f-sans">{product.category}</span>
-                  <h3 className="text-[#282828] font-serif text-base leading-tight mt-1 mb-2 truncate">
-                    {product.name?.en || product.name}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#282828] font-bold f-sans">{(product.price || 0).toLocaleString()} SAR</span>
-                    <Link
-                      to={`/admin/products/edit/${product.id}`}
-                      className="text-[10px] font-bold uppercase tracking-widest text-[#8A7A6B] hover:text-[#282828] transition-colors f-sans flex items-center gap-1"
-                    >
-                      Edit <Pencil size={10} />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+      <div className="relative group">
+         <Search size={22} className="absolute left-10 top-1/2 -translate-y-1/2 text-ikea-darkGray opacity-40 group-focus-within:opacity-100 transition-opacity" />
+         <input 
+            type="text" 
+            placeholder="Search by ID, Name or Category..." 
+            className="w-full bg-white border-4 border-ikea-gray rounded-[2.5rem] py-8 pl-24 pr-12 text-xl font-black outline-none focus:border-ikea-blue transition-all"
+         />
+         <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-6">
+            <span className="text-[11px] font-black text-ikea-darkGray uppercase tracking-widest opacity-40">{products.length} UNITS TRACKED</span>
+            <SlidersHorizontal size={24} className="text-ikea-blue cursor-pointer" />
+         </div>
       </div>
-    </AdminLayout>
+
+      <main>
+         {loading ? (
+            <div className="py-40 flex justify-center"><div className="w-12 h-12 border-4 border-ikea-gray border-t-ikea-blue rounded-full animate-spin" /></div>
+         ) : view === 'list' ? (
+            <div className="bg-white rounded-[3.5rem] border border-ikea-gray overflow-hidden shadow-2xl">
+               <table className="w-full text-start">
+                  <thead className="bg-ikea-gray/30 border-b border-ikea-gray">
+                     <tr className="text-[10px] font-black text-ikea-blue uppercase tracking-widest">
+                        <th className="px-10 py-6">IDENTIFIER</th>
+                        <th className="px-10 py-6">PRODUCT DESIGN</th>
+                        <th className="px-10 py-6">CATEGORY</th>
+                        <th className="px-10 py-6">UNIT VALUE</th>
+                        <th className="px-10 py-6 text-center">ACTION</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ikea-gray/50">
+                     {products.map((p, i) => (
+                        <tr key={p.id} className="hover:bg-ikea-gray/10 transition-colors group">
+                           <td className="px-10 py-8 font-black text-sm text-ikea-blue">#{p.id.slice(0, 8).toUpperCase()}</td>
+                           <td className="px-10 py-8">
+                              <div className="flex items-center gap-6">
+                                 <div className="w-16 h-16 bg-ikea-gray rounded-2xl overflow-hidden p-2 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    <img src={p.images?.[0]} className="w-full h-full object-contain" alt="" />
+                                 </div>
+                                 <div>
+                                    <p className="font-black text-lg uppercase tracking-tight leading-none mb-1">{p.name?.en || p.name}</p>
+                                    <p className="text-[10px] font-bold text-ikea-darkGray uppercase opacity-60">Status: Deployed</p>
+                                 </div>
+                              </div>
+                           </td>
+                           <td className="px-10 py-8 text-[11px] font-black uppercase tracking-widest text-ikea-darkGray opacity-60">{p.category?.toUpperCase() || 'CORE'}</td>
+                           <td className="px-10 py-8">
+                              <p className="text-xl font-black text-ikea-black tracking-tighter">{p.price?.toLocaleString()} <span className="text-xs font-normal opacity-60">SAR</span></p>
+                           </td>
+                           <td className="px-10 py-8">
+                              <div className="flex justify-center gap-3">
+                                 <button className="p-4 rounded-xl hover:bg-ikea-blue hover:text-white transition-all shadow-sm"><Edit2 size={18} /></button>
+                                 <button className="p-4 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={18} /></button>
+                              </div>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+               {products.map(p => (
+                  <div key={p.id} className="bg-white rounded-[3rem] border border-ikea-gray p-8 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+                     <div className="aspect-square bg-ikea-gray rounded-3xl overflow-hidden p-6 mb-8 group-hover:scale-105 transition-transform duration-500">
+                        <img src={p.images?.[0]} className="w-full h-full object-contain" alt="" />
+                     </div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-ikea-blue mb-4">IDENTIFIER: #{p.id.slice(0, 6)}</p>
+                     <h3 className="text-xl font-black text-ikea-black uppercase tracking-tighter mb-4 leading-none">{p.name?.en || p.name}</h3>
+                     <div className="flex justify-between items-end pt-4 border-t border-ikea-gray">
+                        <p className="text-2xl font-black text-ikea-blue tracking-tighter">{p.price?.toLocaleString()} SAR</p>
+                        <button className="p-3 bg-ikea-gray rounded-xl hover:bg-ikea-blue hover:text-white transition-all"><ArrowUpRight size={20} /></button>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         )}
+      </main>
+    </div>
   );
 };
 

@@ -1,136 +1,62 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useLang } from '../App';
-import { translations } from '../content/translations';
-import { ShoppingBag } from 'lucide-react';
+import { ArrowRight, LayoutGrid, Box } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useStore } from '../store/context/StoreContext';
-import { ProductCard } from '../store/components/ProductCard';
+import { Link } from 'react-router-dom';
 
-/* =========================================
-   ANIMATION VARIANTS
-   ========================================= */
-const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.22, 1, 0.36, 1] } }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-
-/* =========================================
-   MAIN PAGE COMPONENT
-   ========================================= */
 export const Products: React.FC = () => {
-  const { lang } = useLang();
-  const t = translations[lang];
-  const productsT = t.products;
-  const [activeCategory, setActiveCategory] = useState('all');
-  const { products, productsLoading } = useStore();
+    const { lang } = useLang();
+    const ar = lang === 'ar';
 
-  const filteredProducts = activeCategory === 'all'
-    ? products
-    : products.filter(p => p.category === activeCategory);
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
-  return (
-    <div className="overflow-hidden bg-[#FDFCFB]">
-      {/* --- MAIN CONTENT --- */}
-      <main className="flex-grow pt-32 md:pt-40 relative">
+    const productCategories = [
+        { id: 1, title: ar ? 'سلسلة المعيشة' : 'RESIDENTIAL CORE', img: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=800', count: '45 Units' },
+        { id: 2, title: ar ? 'حلول المكاتب' : 'INDUSTRIAL OFFICE', img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800', count: '32 Units' },
+        { id: 3, title: ar ? 'المجموعات الفاخرة' : 'EBONY ARCHIVE', img: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&q=80&w=800', count: '18 Units' },
+    ];
 
-        {/* Header Area */}
-        <section className="relative w-full px-6 mb-16">
-          <div className="absolute top-0 right-[10%] w-[400px] h-[400px] bg-[#F5F2EE] rounded-full filter blur-[120px] opacity-60 -z-10" />
-          <div className="max-w-[1400px] mx-auto pt-10 pb-16 text-center md:text-left rtl:md:text-right relative">
+    return (
+        <div className="bg-white f-sans min-h-screen pb-32 overflow-hidden" dir={ar ? 'rtl' : 'ltr'}>
+            <header className="bg-ikea-gray/30 pt-32 pb-20 md:pt-48 md:pb-40 px-6 md:px-12 relative overflow-hidden text-start">
+               <div className="container mx-auto px-6 max-w-[1440px] relative z-10">
+                  <div className="bg-ikea-blue inline-block px-4 py-1.5 mb-8 skew-x-[-4deg]">
+                    <span className="text-white text-[11px] font-black uppercase tracking-[0.4em] skew-x-[4deg] inline-block">PRODUCTION</span>
+                  </div>
+                  <h1 className="text-6xl md:text-[9rem] font-black text-ikea-black tracking-tighter leading-[0.8] mb-12 uppercase">
+                    {ar ? <>فهرس<br /><span className="text-ikea-blue">المنتجات</span></> : <>PRODUCT<br /><span className="text-ikea-blue">INVENTORY</span></>}
+                  </h1>
+               </div>
+            </header>
 
-            <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="flex flex-col md:flex-row justify-between items-end gap-10">
-              <div className="text-left rtl:text-right w-full">
-                <motion.div variants={fadeUp} className="inline-flex items-center gap-3 mb-6">
-                  <span className="w-8 h-[1px] bg-[#8A7A6B]"></span>
-                  <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#8A7A6B]">
-                    {lang === 'ar' ? 'اختيارنا المنسق' : 'Curated Selection'}
-                  </span>
-                </motion.div>
-                <motion.h1 variants={fadeUp} className="text-6xl md:text-8xl font-serif tracking-tight text-[#282828] leading-[0.9]">
-                  {lang === 'ar' ? <>المجموعة <br /><span className="italic font-light text-[#8A7A6B]">الحصرية.</span></> : <>The Master<br /><span className="italic font-light text-[#8A7A6B]">Collection.</span></>}
-                </motion.h1>
-              </div>
-
-              <motion.div variants={fadeUp} className="flex items-center gap-4 bg-white/60 backdrop-blur-md px-6 py-4 rounded-2xl shadow-sm border border-[#282828]/5 shrink-0">
-                <ShoppingBag size={20} className="text-[#8A7A6B]" />
-                <div className="text-left rtl:text-right">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#737373] mb-1">
-                    {lang === 'ar' ? 'حالة المخزون' : 'Inventory Status'}
-                  </p>
-                  <p className="text-sm font-serif text-[#282828]">
-                    {products.length} {lang === 'ar' ? 'قطعة متوفرة' : 'Pieces Available'}
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
-
-          </div>
-        </section>
-
-        <div className="bg-[#FDFCFB] min-h-screen pb-32">
-          <div className="container mx-auto px-6 max-w-[1400px]">
-
-            {/* Premium Filter Tabs */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
-              className="flex flex-wrap justify-center md:justify-start gap-3 md:gap-6 mb-20 border-b border-[#282828]/10 pb-6"
-            >
-              <button
-                onClick={() => setActiveCategory('all')}
-                className={`text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] px-6 py-3 rounded-full transition-all duration-300 ${activeCategory === 'all' ? 'bg-[#282828] text-white shadow-lg' : 'bg-transparent text-[#737373] hover:text-[#282828] hover:bg-[#F5F2EE]'}`}
-              >
-                {lang === 'ar' ? 'الكل' : 'All'}
-              </button>
-              {productsT.categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] px-6 py-3 rounded-full transition-all duration-300 ${activeCategory === cat.id ? 'bg-[#282828] text-white shadow-lg' : 'bg-transparent text-[#737373] hover:text-[#282828] hover:bg-[#F5F2EE]'}`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </motion.div>
-
-            {/* Product Grid */}
-            {productsLoading ? (
-              <div className="flex items-center justify-center py-32">
-                <div className="w-10 h-10 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
-              </div>
-            ) : (
-              <>
-                <motion.div
-                  key={activeCategory}
-                  initial="hidden" animate="visible" variants={staggerContainer}
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-                >
-                  {filteredProducts.map((product) => (
-                    <motion.div variants={fadeUp} key={product.id}>
-                      <ProductCard product={product} />
-                    </motion.div>
+            <main className="container mx-auto px-6 max-w-[1440px] py-24">
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                  {productCategories.map((cat, i) => (
+                     <motion.div 
+                        key={cat.id} 
+                        initial={{ opacity: 0, scale: 0.95 }} 
+                        whileInView={{ opacity: 1, scale: 1 }} 
+                        className="group cursor-pointer text-start"
+                     >
+                        <div className="aspect-[3/4] rounded-[3rem] overflow-hidden bg-ikea-gray mb-10 border-4 border-ikea-gray shadow-xl relative">
+                           <img src={cat.img} className="w-full h-full object-cover transition-transform duration-[4s] group-hover:scale-110" alt="" />
+                           <div className="absolute inset-0 bg-ikea-blue/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                           <div className="absolute bottom-10 left-10 text-white z-20">
+                              <p className="text-[11px] font-black uppercase tracking-widest bg-ikea-blue px-4 py-1.5 rounded-full inline-block mb-2">{cat.count}</p>
+                              <h3 className="text-4xl font-black tracking-tighter uppercase leading-none">{cat.title}</h3>
+                           </div>
+                        </div>
+                        <Link to="/store" className="flex items-center gap-4 text-ikea-blue font-black tracking-widest text-[13px] hover:gap-6 transition-all uppercase">
+                           {ar ? 'عرض المجموعة' : 'EXPLORE COLLECTION'} <ArrowRight size={20} className={ar ? 'rotate-180' : ''} />
+                        </Link>
+                     </motion.div>
                   ))}
-                </motion.div>
-
-                {filteredProducts.length === 0 && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32">
-                    <p className="text-2xl font-serif text-[#737373] italic">
-                      {lang === 'ar' ? 'لا توجد منتجات في هذا القسم حالياً.' : 'No pieces found in this collection currently.'}
-                    </p>
-                  </motion.div>
-                )}
-              </>
-            )}
-
-          </div>
+               </div>
+            </main>
         </div>
-      </main>
-    </div>
-  );
+    );
 };
 
 export default Products;

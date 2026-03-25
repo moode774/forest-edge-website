@@ -1,211 +1,150 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingBag, Sparkles, Star, ArrowRight, Package } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, SlidersHorizontal, Package, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useLang } from '../App';
-import { FilterBar, SortOption } from '../store/components/FilterBar';
+import { useLang } from '../store/context/LangContext';
 import { ProductCard } from '../store/components/ProductCard';
 import { useStore } from '../store/context/StoreContext';
 
+const CATEGORIES = [
+  { id: 'all', en: 'All Collection', ar: 'كل المجموعة' },
+  { id: 'tables', en: 'Tables', ar: 'طاولات' },
+  { id: 'chairs', en: 'Chairs', ar: 'كراسي' },
+  { id: 'storage', en: 'Storage', ar: 'تخزين' },
+  { id: 'office', en: 'Office', ar: 'مكاتب' },
+  { id: 'outdoor', en: 'Outdoor', ar: 'خارجي' },
+  { id: 'bedroom', en: 'Bedroom', ar: 'غرف نوم' },
+];
+
 export const Store: React.FC = () => {
   const { lang } = useLang();
-  const { cartCount, setCartOpen, products, productsLoading } = useStore();
+  const { products, productsLoading } = useStore();
   const ar = lang === 'ar';
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [sortBy, setSortBy] = useState<SortOption>('featured');
+  const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'newest'>('featured');
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    let list = activeCategory === 'all'
-      ? products
-      : products.filter(p => p.category === activeCategory);
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) => {
+          const nameEn = p.name?.en || p.name || '';
+          const nameAr = p.name?.ar || '';
+          const descEn = p.description?.en || p.description || '';
+          const descAr = p.description?.ar || '';
+          return nameEn.toLowerCase().includes(query) || 
+                 nameAr.toLowerCase().includes(query) ||
+                 descEn.toLowerCase().includes(query) ||
+                 descAr.toLowerCase().includes(query);
+        }
+      );
+    }
+
+    if (activeCategory !== 'all') {
+      result = result.filter((p) => p.category === activeCategory);
+    }
 
     switch (sortBy) {
-      case 'price-asc':  return [...list].sort((a, b) => a.price - b.price);
-      case 'price-desc': return [...list].sort((a, b) => b.price - a.price);
-      case 'rating':     return [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      default:           return [...list].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      case 'price-asc': return result.sort((a, b) => a.price - b.price);
+      case 'price-desc': return result.sort((a, b) => b.price - a.price);
+      case 'newest': return result.sort((a, b) => (b.id > a.id ? 1 : -1));
+      default: return result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
-  }, [activeCategory, sortBy, products]);
+  }, [searchQuery, activeCategory, sortBy, products]);
 
-  const featured = products.filter(p => p.featured).slice(0, 3);
+  const sortOptions = [
+    { value: 'featured', en: 'Featured', ar: 'المميزة' },
+    { value: 'newest', en: 'Newest Arrivals', ar: 'الأحدث' },
+    { value: 'price-asc', en: 'Price: Low to High', ar: 'السعر: من الأقل للأعلى' },
+    { value: 'price-desc', en: 'Price: High to Low', ar: 'السعر: من الأعلى للأقل' },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] f-sans" dir={ar ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-neutral-50 f-sans selection:bg-ikea-yellow selection:text-ikea-blue" dir={ar ? 'rtl' : 'ltr'}>
+      <header className="bg-white border-b border-ikea-gray pt-32 pb-16 text-start">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <div className="w-full md:w-auto">
+              <div className="bg-ikea-blue inline-block px-4 py-1.5 mb-4 skew-x-[-4deg]">
+                 <span className="text-white text-[10px] font-black uppercase tracking-[0.4em] skew-x-[4deg] inline-block">PRODUCTION CATALOG</span>
+              </div>
+              <h1 className="text-5xl md:text-8xl font-black text-ikea-black tracking-tighter uppercase leading-[0.8]">
+                {ar ? 'المتجر' : 'Store'}
+              </h1>
+            </div>
+            <Link to="/track" className="flex items-center gap-4 text-[11px] font-black uppercase tracking-widest text-ikea-blue border-b-4 border-ikea-yellow pb-2 hover:opacity-70 transition-opacity">
+              <Package size={18} /> {ar ? 'تتبع الطلب' : 'TRACK ARCHIVE'}
+            </Link>
+          </div>
 
-      {/* ─── HERO BANNER ─── */}
-      <section className="relative h-[72vh] min-h-[520px] overflow-hidden flex items-end">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1800&q=80"
-            alt="Store hero"
-            className="w-full h-full object-cover scale-105"
-            style={{ animation: 'heroZoom 20s ease-in-out infinite alternate' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1A]/80 via-[#1C1C1A]/30 to-transparent" />
+          <div className="relative w-full max-w-4xl group">
+            <Search className={`absolute top-1/2 -translate-y-1/2 w-6 h-6 text-ikea-darkGray opacity-40 group-focus-within:opacity-100 transition-opacity ${ar ? 'right-0' : 'left-0'}`} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={ar ? 'ابحث عن منتج، تصميم، أو فئة...' : 'Search for units, designs, or categories...'}
+              className={`w-full bg-transparent border-b-4 border-ikea-gray py-8 text-2xl md:text-4xl font-black focus:outline-none focus:border-ikea-blue transition-colors placeholder:text-ikea-gray ${ar ? 'pr-12 pl-4' : 'pl-12 pr-4'}`}
+            />
+          </div>
         </div>
+      </header>
 
-        <style>{`
-          @keyframes heroZoom {
-            from { transform: scale(1.05); }
-            to   { transform: scale(1.15); }
-          }
-        `}</style>
-
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-12 pb-16 md:pb-24">
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <span className="inline-flex items-center gap-2 text-[#DCC7A1] text-[10px] font-bold uppercase tracking-[0.3em] mb-5">
-              <Sparkles size={12} />
-              {ar ? 'المتجر الفاخر' : 'Luxury Store'}
-            </span>
-            <h1 className="font-serif text-white text-5xl md:text-7xl leading-none mb-6">
-              {ar ? (
-                <>اكتشف<br /><span className="italic font-light text-[#DCC7A1]">مجموعتنا</span></>
-              ) : (
-                <>Discover<br /><span className="italic font-light text-[#DCC7A1]">Our Collection</span></>
-              )}
-            </h1>
-            <p className="text-white/70 text-lg max-w-xl f-sans font-light leading-relaxed">
-              {ar
-                ? 'قطع أثاث مصنوعة يدوياً من أجود الخامات، تجمع بين الفخامة الخالدة والوظائف العصرية.'
-                : 'Handcrafted furniture from the finest materials — where timeless luxury meets modern function.'}
-            </p>
-            <div className="flex items-center gap-5 mt-10">
+      <section className="bg-white sticky top-0 z-40 border-b border-ikea-gray shadow-sm">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-12">
+          <div className="flex overflow-x-auto hide-scrollbar py-8 gap-10">
+            {CATEGORIES.map((cat) => (
               <button
-                onClick={() => setCartOpen(true)}
-                className="relative flex items-center gap-3 bg-white text-[#282828] px-8 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-[#8A7A6B] hover:text-white transition-all duration-300 shadow-xl"
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`whitespace-nowrap text-[11px] font-black uppercase tracking-[0.2em] transition-all relative pb-2 ${
+                  activeCategory === cat.id ? 'text-ikea-blue' : 'text-ikea-darkGray opacity-40 hover:opacity-100'
+                }`}
               >
-                <ShoppingBag size={16} />
-                {ar ? 'سلة التسوق' : 'My Cart'}
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-[#8A7A6B] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
+                {ar ? cat.ar : cat.en}
+                {activeCategory === cat.id && (
+                  <motion.div layoutId="activeCategory" className="absolute left-0 right-0 -bottom-1 h-1 bg-ikea-yellow" />
                 )}
               </button>
-              <Link
-                to="/orders"
-                className="flex items-center gap-2 text-white/80 hover:text-white text-[11px] font-bold uppercase tracking-[0.2em] transition-colors"
-              >
-                <Package size={14} />
-                {ar ? 'طلباتي' : 'My Orders'}
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── FEATURED STRIP ─── */}
-      <section className="border-b border-[#282828]/5 overflow-hidden">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-10">
-          <div className="flex items-center gap-3 mb-8">
-            <Star size={14} className="text-[#8A7A6B]" fill="currentColor" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#8A7A6B]">
-              {ar ? 'القطع المميزة' : 'Featured Pieces'}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featured.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Link
-                  to={`/store/product/${product.id}`}
-                  className="group relative overflow-hidden rounded-2xl h-52 flex items-end block"
-                >
-                  <img
-                    src={product.images[0]}
-                    alt={product.name[lang]}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1A]/70 to-transparent" />
-                  <div className="relative z-10 p-5 w-full flex items-end justify-between">
-                    <div>
-                      <p className="text-white/60 text-[9px] uppercase tracking-widest font-bold mb-1">{product.category}</p>
-                      <h3 className="text-white font-serif text-lg leading-tight">{product.name[lang]}</h3>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[#DCC7A1] font-bold text-sm f-sans">{product.price.toLocaleString()} SAR</span>
-                      <ArrowRight size={16} className={`text-white/60 group-hover:text-white transition-colors ${ar ? 'rotate-180' : ''}`} />
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── FILTER BAR ─── */}
-      <FilterBar
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        productCount={filtered.length}
-      />
-
-      {/* ─── PRODUCT GRID ─── */}
-      <section className="max-w-[1400px] mx-auto px-6 md:px-12 py-16">
-        {productsLoading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="w-10 h-10 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
+      <section className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 flex justify-between items-center">
+          <div className="text-[11px] font-black uppercase tracking-widest text-ikea-darkGray opacity-40">
+             {productsLoading ? (ar ? 'جاري التحميل...' : 'SYNCING...') : (<span>{filteredProducts.length} {ar ? 'وحدة مكتشفة' : 'UNITS DETECTED'}</span>)}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-32">
-            <p className="text-[#737373] text-lg font-serif italic">
-              {ar ? 'لا توجد منتجات في هذا التصنيف' : 'No products found in this category'}
-            </p>
+          <div className="relative">
+            <button onClick={() => setIsSortOpen(!isSortOpen)} className="flex items-center gap-4 text-[11px] font-black uppercase tracking-widest text-ikea-blue hover:text-ikea-black transition-colors">
+              <SlidersHorizontal size={16} /> {ar ? 'ترتيب' : 'SORT'} <ChevronDown size={14} className={`transition-transform duration-500 ${isSortOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {isSortOpen && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className={`absolute top-full mt-6 w-64 bg-white border-4 border-ikea-gray rounded-[2rem] shadow-2xl z-50 p-4 ${ar ? 'left-0' : 'right-0'}`}>
+                  {sortOptions.map((opt) => (
+                    <button key={opt.value} onClick={() => { setSortBy(opt.value as any); setIsSortOpen(false); }} className={`w-full text-start px-6 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${sortBy === opt.value ? 'bg-ikea-blue text-white' : 'text-ikea-darkGray hover:bg-ikea-gray'}`}>
+                      {ar ? opt.ar : opt.en}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        ) : (
-          <motion.div
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-          >
-            {filtered.map((product, i) => (
-              <motion.div
-                key={product.id}
-                layout
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
       </section>
 
-      {/* ─── TRUST BADGES ─── */}
-      <section className="border-t border-[#282828]/5 bg-white">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { icon: '🪵', en: 'Premium Wood', ar: 'خشب فاخر', sub: { en: 'Sourced from certified forests', ar: 'من غابات معتمدة' } },
-              { icon: '✋', en: 'Handcrafted', ar: 'صناعة يدوية', sub: { en: 'By master craftsmen', ar: 'بأيدي حرفيين متمرسين' } },
-              { icon: '🚚', en: 'White-Glove Delivery', ar: 'توصيل فاخر', sub: { en: 'Installation included', ar: 'يشمل التركيب' } },
-              { icon: '🛡️', en: '5-Year Warranty', ar: 'ضمان ٥ سنوات', sub: { en: 'On all our pieces', ar: 'على جميع قطعنا' } },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="flex flex-col items-center text-center gap-3"
-              >
-                <span className="text-4xl">{item.icon}</span>
-                <div>
-                  <p className="text-[#282828] font-bold text-sm uppercase tracking-widest">{ar ? item.ar : item.en}</p>
-                  <p className="text-[#737373] text-xs mt-1">{ar ? item.sub.ar : item.sub.en}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+      <section className="max-w-[1440px] mx-auto px-6 md:px-12 pb-40">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <AnimatePresence>
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </AnimatePresence>
         </div>
       </section>
     </div>

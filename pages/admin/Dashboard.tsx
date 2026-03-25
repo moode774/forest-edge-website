@@ -1,196 +1,103 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { AdminLayout } from './AdminLayout';
-import {
-  ShoppingBag, Package, DollarSign, Clock,
-  TrendingUp, ArrowRight, CheckCircle2, Truck
+import React from 'react';
+import { 
+  BarChart3, Users, Package, ShoppingCart, 
+  ArrowUpRight, ArrowDownRight, Activity, Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const statusColor: Record<string, string> = {
-  confirmed:  'bg-blue-50 text-blue-600 border-blue-100',
-  processing: 'bg-amber-50 text-amber-600 border-amber-100',
-  shipped:    'bg-purple-50 text-purple-600 border-purple-100',
-  delivered:  'bg-green-50 text-green-600 border-green-100',
-};
+const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
+  <div className="bg-white rounded-[2.5rem] p-10 border border-ikea-gray shadow-sm hover:shadow-xl transition-all group">
+    <div className="flex justify-between items-start mb-8">
+       <div className="w-14 h-14 bg-ikea-gray rounded-2xl flex items-center justify-center text-ikea-blue group-hover:bg-ikea-blue group-hover:text-white transition-colors">
+          <Icon size={28} />
+       </div>
+       <div className={`flex items-center gap-1 text-[11px] font-black uppercase tracking-widest ${trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
+          {trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+          {change}%
+       </div>
+    </div>
+    <h3 className="text-[11px] font-black text-ikea-darkGray uppercase tracking-widest mb-2 opacity-60">{title}</h3>
+    <p className="text-4xl font-black text-ikea-black tracking-tighter uppercase">{value}</p>
+  </div>
+);
 
-export const Dashboard: React.FC = () => {
-  const [orders,   setOrders]   = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading,  setLoading]  = useState(true);
-
-  useEffect(() => {
-    const unsubOrders = onSnapshot(
-      query(collection(db, 'orders'), orderBy('date', 'desc')),
-      snap => { setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false); },
-      () => setLoading(false)
-    );
-    const unsubProducts = onSnapshot(
-      collection(db, 'products'),
-      snap => setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-    );
-    return () => { unsubOrders(); unsubProducts(); };
-  }, []);
-
-  const totalRevenue   = orders.reduce((s, o) => s + (o.total || 0), 0);
-  const pendingOrders  = orders.filter(o => o.status !== 'delivered').length;
-  const deliveredCount = orders.filter(o => o.status === 'delivered').length;
-
-  const stats = [
-    { label: 'Total Orders',  value: orders.length,                  icon: ShoppingBag,  color: 'bg-blue-50',   iconColor: 'text-blue-500'   },
-    { label: 'Total Revenue', value: `${totalRevenue.toLocaleString()} SAR`, icon: DollarSign, color: 'bg-green-50',  iconColor: 'text-green-500'  },
-    { label: 'Products',      value: products.length,                icon: Package,      color: 'bg-purple-50', iconColor: 'text-purple-500' },
-    { label: 'Pending',       value: pendingOrders,                  icon: Clock,        color: 'bg-amber-50',  iconColor: 'text-amber-500'  },
-  ];
-
+const Dashboard: React.FC = () => {
   return (
-    <AdminLayout>
-      <div className="p-6 md:p-10 max-w-[1400px]">
-
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="font-serif text-[#282828] text-3xl md:text-4xl">Dashboard</h1>
-          <p className="text-[#737373] text-sm mt-1 f-sans">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-40">
-            <div className="w-10 h-10 rounded-full border-2 border-[#8A7A6B]/30 border-t-[#8A7A6B] animate-spin" />
-          </div>
-        ) : (
-          <>
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
-              {stats.map((stat, i) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.07 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm border border-[#282828]/5"
-                  >
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${stat.color}`}>
-                      <Icon size={20} className={stat.iconColor} />
-                    </div>
-                    <p className="text-2xl font-bold text-[#282828] font-serif">{stat.value}</p>
-                    <p className="text-[10px] text-[#737373] uppercase tracking-[0.2em] font-bold mt-1 f-sans">{stat.label}</p>
-                  </motion.div>
-                );
-              })}
+    <div className="p-8 md:p-12 space-y-12 text-start">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+         <div>
+            <div className="flex items-center gap-4 mb-4">
+               <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] animate-pulse" />
+               <span className="text-[10px] font-black text-ikea-blue uppercase tracking-widest underline decoration-2 underline-offset-4">System Operational</span>
             </div>
+            <h1 className="text-5xl md:text-7xl font-black text-ikea-black tracking-tighter uppercase">Operations Hub</h1>
+         </div>
+         <div className="bg-ikea-gray px-6 py-4 rounded-2xl border border-ikea-gray flex items-center gap-4">
+            <Globe size={18} className="text-ikea-blue" />
+            <span className="text-[11px] font-black uppercase tracking-widest text-ikea-darkGray">Riyadh HQ Terminal</span>
+         </div>
+      </header>
 
-            {/* Two Columns */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-              {/* Recent Orders Table */}
-              <div className="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-[#282828]/5 overflow-hidden">
-                <div className="px-6 py-5 border-b border-[#282828]/5 flex items-center justify-between">
-                  <h2 className="font-serif text-[#282828] text-xl">Recent Orders</h2>
-                  <Link to="/admin/orders" className="flex items-center gap-1 text-[#8A7A6B] text-[10px] font-bold uppercase tracking-widest hover:text-[#282828] transition-colors f-sans">
-                    View All <ArrowRight size={12} />
-                  </Link>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-[#282828]/5">
-                        {['Order ID','Customer','Total','Status'].map(h => (
-                          <th key={h} className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[#737373] f-sans">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.slice(0, 7).map((order) => (
-                        <tr key={order.id} className="border-b border-[#282828]/3 hover:bg-[#FDFCFB] transition-colors">
-                          <td className="px-5 py-4 text-xs font-bold text-[#282828] f-sans tracking-wide">{order.id}</td>
-                          <td className="px-5 py-4 text-sm text-[#282828] f-sans">{order.customer?.name || '—'}</td>
-                          <td className="px-5 py-4 text-sm font-bold text-[#282828] f-sans">{(order.total || 0).toLocaleString()} SAR</td>
-                          <td className="px-5 py-4">
-                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-full border f-sans ${statusColor[order.status] || statusColor.confirmed}`}>
-                              {order.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {orders.length === 0 && (
-                    <div className="text-center py-16">
-                      <ShoppingBag size={28} className="mx-auto mb-3 text-[#282828]/10" />
-                      <p className="text-[#737373] text-sm f-sans">No orders yet</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right: Summary Cards */}
-              <div className="space-y-5">
-                {/* Order Status Summary */}
-                <div className="bg-white rounded-2xl shadow-sm border border-[#282828]/5 p-6">
-                  <h3 className="font-serif text-[#282828] text-lg mb-5">Order Status</h3>
-                  <div className="space-y-3">
-                    {[
-                      { label: 'Confirmed',  count: orders.filter(o=>o.status==='confirmed').length,  icon: CheckCircle2, color: 'text-blue-500'   },
-                      { label: 'Processing', count: orders.filter(o=>o.status==='processing').length, icon: Clock,        color: 'text-amber-500'  },
-                      { label: 'Shipped',    count: orders.filter(o=>o.status==='shipped').length,    icon: Truck,        color: 'text-purple-500' },
-                      { label: 'Delivered',  count: deliveredCount,                                   icon: CheckCircle2, color: 'text-green-500'  },
-                    ].map((s, i) => {
-                      const Icon = s.icon;
-                      const pct = orders.length ? Math.round((s.count / orders.length) * 100) : 0;
-                      return (
-                        <div key={i}>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2">
-                              <Icon size={14} className={s.color} />
-                              <span className="text-xs text-[#282828] font-bold f-sans">{s.label}</span>
-                            </div>
-                            <span className="text-xs text-[#737373] f-sans">{s.count}</span>
-                          </div>
-                          <div className="h-1.5 bg-[#F5F2EE] rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                              transition={{ delay: 0.3 + i * 0.1, duration: 0.6 }}
-                              className="h-full bg-[#8A7A6B] rounded-full"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Quick Links */}
-                <div className="bg-[#1C1C1A] rounded-2xl p-6 text-white">
-                  <h3 className="font-serif text-white text-lg mb-5">Quick Actions</h3>
-                  <div className="space-y-3">
-                    <Link to="/admin/products/new" className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <Package size={16} className="text-[#8A7A6B]" />
-                        <span className="text-[11px] font-bold uppercase tracking-widest f-sans">Add Product</span>
-                      </div>
-                      <ArrowRight size={14} className="text-white/30 group-hover:text-white/60 transition-colors" />
-                    </Link>
-                    <Link to="/admin/orders" className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <ShoppingBag size={16} className="text-[#8A7A6B]" />
-                        <span className="text-[11px] font-bold uppercase tracking-widest f-sans">Manage Orders</span>
-                      </div>
-                      <ArrowRight size={14} className="text-white/30 group-hover:text-white/60 transition-colors" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <StatCard title="Total Revenue" value="450K SAR" change="12.5" icon={BarChart3} trend="up" />
+        <StatCard title="Active Deployments" value="128" change="4.2" icon={Package} trend="up" />
+        <StatCard title="Human Capital" value="1,042" change="0.8" icon={Users} trend="down" />
+        <StatCard title="Success Rate" value="99.2%" change="2.1" icon={Activity} trend="up" />
       </div>
-    </AdminLayout>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 pt-12">
+         <div className="bg-white rounded-[3.5rem] border border-ikea-gray p-12 shadow-2xl relative overflow-hidden">
+            <div className="flex justify-between items-center mb-12">
+               <h3 className="text-2xl font-black tracking-tighter uppercase">Recent Activity Registry</h3>
+               <button className="text-[11px] font-black text-ikea-blue uppercase tracking-widest hover:underline">Full Log Report</button>
+            </div>
+            <div className="space-y-6">
+               {[1,2,3,4,5].map(i => (
+                  <div key={i} className="flex items-center justify-between p-6 rounded-3xl bg-ikea-gray/30 hover:bg-ikea-gray/50 transition-all group">
+                     <div className="flex items-center gap-6">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-ikea-blue shadow-sm group-hover:shadow-md transition-shadow">
+                           <ShoppingCart size={20} />
+                        </div>
+                        <div>
+                           <p className="font-black text-sm uppercase tracking-tight">Order Captured #FE-2024-{1000 + i}</p>
+                           <p className="text-[10px] font-bold text-ikea-darkGray opacity-60">Verified {i * 12}m ago</p>
+                        </div>
+                     </div>
+                     <span className="text-sm font-black text-ikea-blue">{(Math.random() * 5000 + 1000).toFixed(0)} SAR</span>
+                  </div>
+               ))}
+            </div>
+         </div>
+
+         <div className="bg-ikea-black text-white rounded-[3.5rem] p-12 space-y-12">
+            <h3 className="text-2xl font-black tracking-tighter uppercase border-b border-white/10 pb-6">System Load</h3>
+            <div className="space-y-10">
+               {[
+                  { label: 'Inventory Distribution', val: 75 },
+                  { label: 'Network Latency', val: 12 },
+                  { label: 'Logistics Queue', val: 88 },
+               ].map((m, i) => (
+                  <div key={i} className="space-y-4">
+                     <div className="flex justify-between text-[11px] font-black uppercase tracking-widest opacity-60">
+                        <span>{m.label}</span>
+                        <span>{m.val}%</span>
+                     </div>
+                     <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <motion.div 
+                           initial={{ width: 0 }}
+                           whileInView={{ width: `${m.val}%` }}
+                           className={`h-full ${m.val > 80 ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-ikea-yellow'}`}
+                        />
+                     </div>
+                  </div>
+               ))}
+            </div>
+            <div className="pt-10">
+               <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 text-center">FOREST EDGE INDUSTRIAL CORE</p>
+            </div>
+         </div>
+      </div>
+    </div>
   );
 };
 

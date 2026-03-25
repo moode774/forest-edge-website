@@ -2,134 +2,82 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase';
-import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Lock, User, ShieldAlert, ArrowRight } from 'lucide-react';
 
-export const AdminLogin: React.FC = () => {
-  const navigate = useNavigate();
-  const [email, setEmail]       = useState('');
+const AdminLogin: React.FC = () => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw]     = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
+    setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/admin');
-    } catch {
-      setError('Invalid email or password. Please try again.');
+      navigate('/admin/dashboard');
+    } catch (err: any) {
+      setError('Access Denied: Invalid Credentials');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#1C1C1A] flex items-center justify-center px-4" dir="ltr">
-      {/* Background grain */}
-      <div className="fixed inset-0 opacity-[0.03] pointer-events-none"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md"
-      >
-        {/* Logo */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-serif text-white tracking-widest">
-            FOREST<span className="italic font-light text-[#8A7A6B]">Edge</span>
-          </h1>
-          <p className="text-[#8A7A6B] text-[10px] uppercase tracking-[0.4em] mt-2 font-sans font-bold">
-            Admin Dashboard
-          </p>
+    <div className="min-h-screen bg-ikea-black flex items-center justify-center p-6 f-sans">
+      <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-2 bg-ikea-blue" />
+        
+        <div className="w-16 h-16 bg-ikea-gray rounded-2xl flex items-center justify-center text-ikea-blue mb-10">
+           <ShieldAlert size={32} />
         </div>
 
-        {/* Card */}
-        <div className="bg-white/5 border border-white/10 rounded-[2rem] p-10 backdrop-blur-sm">
-          <h2 className="text-white font-serif text-2xl mb-2">Sign In</h2>
-          <p className="text-white/40 text-sm font-sans mb-8">Access the management dashboard</p>
+        <h1 className="text-4xl font-black text-ikea-black tracking-tighter mb-4 uppercase">Command Center</h1>
+        <p className="text-ikea-darkGray mb-12 font-medium">Access Restricted to Authorized Personnel Only</p>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-6"
-            >
-              <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
-              <p className="text-red-400 text-sm font-sans">{error}</p>
-            </motion.div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50 font-sans block">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-[#8A7A6B] transition-colors font-sans text-sm"
-                  placeholder="admin@forestedge.com"
-                />
-              </div>
+        <form onSubmit={handleLogin} className="space-y-8 text-start">
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-ikea-darkGray uppercase tracking-widest ml-4">Identifier</label>
+            <div className="relative">
+              <User size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-ikea-darkGray" />
+              <input 
+                type="email" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full bg-ikea-gray py-5 pl-16 pr-8 rounded-2xl outline-none font-black"
+                placeholder="system@forestedge.com"
+              />
             </div>
+          </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50 font-sans block">
-                Password
-              </label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-[#8A7A6B] transition-colors font-sans text-sm"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
-                >
-                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-ikea-darkGray uppercase tracking-widest ml-4">Access Code</label>
+            <div className="relative">
+              <Lock size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-ikea-darkGray" />
+              <input 
+                type="password" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full bg-ikea-gray py-5 pl-16 pr-8 rounded-2xl outline-none font-black"
+                placeholder="••••••••"
+              />
             </div>
+          </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#8A7A6B] text-white py-4 rounded-xl font-sans font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-[#6B5D50] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 mt-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
-                </>
-              ) : 'Sign In'}
-            </button>
-          </form>
-        </div>
+          {error && <p className="text-red-600 text-[11px] font-black uppercase text-center">{error}</p>}
 
-        <p className="text-center text-white/20 text-xs font-sans mt-8">
-          Forest Edge © {new Date().getFullYear()} — Admin Access Only
-        </p>
-      </motion.div>
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full bg-ikea-blue text-white py-6 rounded-full font-black uppercase tracking-widest hover:bg-[#00478b] transition-all flex items-center justify-center gap-4 shadow-xl"
+          >
+            {loading ? <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" /> : 'INITIALIZE SESSION'}
+            <ArrowRight size={20} />
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

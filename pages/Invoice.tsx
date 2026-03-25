@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useLang } from '../store/context/LangContext';
 import { Printer, ArrowLeft, CheckCircle2, Clock, Truck, MapPin, AlertCircle } from 'lucide-react';
 
 const statusConfig = {
