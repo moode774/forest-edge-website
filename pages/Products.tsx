@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLang } from '../App';
+import { useLang } from '../store/context/LangContext';
 import { ArrowRight, LayoutGrid, Box } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';

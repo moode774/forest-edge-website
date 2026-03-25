@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, Menu, X, User, Search, Globe, Box } from 'lucide-react';
 import { useStore } from '../store/context/StoreContext';
-import { useLang } from '../App';
+import { useLang } from '../store/context/LangContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navbar: React.FC = () => {

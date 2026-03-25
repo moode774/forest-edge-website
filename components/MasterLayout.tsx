@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
-import { useLang } from '../App';
+import { useLang } from '../store/context/LangContext';
 
 interface MasterLayoutProps {
     children: React.ReactNode;

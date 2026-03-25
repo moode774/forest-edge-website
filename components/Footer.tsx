@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight, Box } from 'lucide-react';
-import { useLang } from '../App';
+import { useLang } from '../store/context/LangContext';
 
 export const Footer: React.FC = () => {
     const { lang } = useLang();

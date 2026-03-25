@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useLang } from '../App';
+import { useLang } from '../store/context/LangContext';
 import { translations } from '../content/translations';
 import { Menu, X } from 'lucide-react';
 import { BackToTop } from './BackToTop';

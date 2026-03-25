@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { collection, query, where, doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Search, Package, CheckCircle2, Clock, Truck, MapPin, FileText, ChevronDown, Phone, Hash, ArrowRight } from 'lucide-react';
-import { useLang } from '../App';
+import { useLang } from '../store/context/LangContext';
 
 const statusConfig = {
   confirmed: { color: 'bg-ikea-blue text-white shadow-lg', icon: CheckCircle2, en: 'Confirmed', ar: 'مؤكد' },
