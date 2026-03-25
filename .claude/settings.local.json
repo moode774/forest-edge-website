@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"C:\\\\Users\\\\mnzar\\\\OneDrive\\\\Desktop\\\\forest-edge-luxury-furniture \\(2\\)\\\\.claude\\\\worktrees\\\\sweet-kilby\" -type f -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" -o -name \"*.json\")",
+      "Bash(grep -E '\\\\.\\(tsx|ts|jsx|js|json|css|scss\\)$')",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx tsc:*)",
+      "Bash(curl -s \"http://localhost:3002/src/pages/Store.tsx\")",
+      "Bash(taskkill /f /im node.exe)",
+      "Bash(taskkill //f //im node.exe)",
+      "Bash(gh pr:*)"
+    ]
+  }
+}
