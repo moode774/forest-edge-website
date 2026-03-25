@@ -145,7 +145,7 @@ export const storeProducts: StoreProduct[] = [
     },
     price: 5200,
     category: 'storage',
-    images: ['https://images.unsplash.com/photo-1616594039964-408e490051e0?auto=format&fit=crop&q=85&w=900'],
+    images: ['https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&q=85&w=900'],
     materials: { en: ['Reinforced Oak', 'Steel Rails'], ar: ['بلوط معزز', 'قضبان فولاذية'] },
     dimensions: { en: '240 × 35 × 220 cm', ar: '٢٤٠ × ٣٥ × ٢٢٠ سم' },
     inStock: true,
