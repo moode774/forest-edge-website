@@ -3,106 +3,154 @@ import { StoreProduct } from '../types/storeTypes';
 export const storeProducts: StoreProduct[] = [
   {
     id: 'p1',
+    sku: 'FE-O-001',
     name: { en: 'VANTAGE WALNUT DESK', ar: 'مكتب فانتاج من الجوز' },
-    description: { 
-        en: 'A high-performance executive desk crafted from solid deep walnut with integrated cable management.', 
-        ar: 'مكتب تنفيذي عالي الأداء مصنوع من خشب الجوز العميق مع نظام إدارة الكابلات المدمج.' 
+    shortDesc: { en: 'Executive desk in solid deep walnut', ar: 'مكتب تنفيذي من خشب الجوز الصلب' },
+    description: {
+      en: 'A high-performance executive desk crafted from solid deep walnut with integrated cable management.',
+      ar: 'مكتب تنفيذي عالي الأداء مصنوع من خشب الجوز العميق مع نظام إدارة الكابلات المدمج.',
     },
     price: 4500,
     category: 'office',
     images: ['https://images.unsplash.com/photo-1518455027359-f3f816b1a22a?auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Solid Walnut', 'Steel'], ar: ['خشب جوز صلب', 'فولاذ'] },
+    dimensions: { en: '160 × 80 × 75 cm', ar: '١٦٠ × ٨٠ × ٧٥ سم' },
+    inStock: true,
     featured: true,
-    sku: 'FE-O-001'
+    rating: 4.8,
+    reviews: 22,
   },
   {
     id: 'p2',
+    sku: 'FE-T-002',
     name: { en: 'ZENITH OAK DINING TABLE', ar: 'طاولة طعام زينيث من البلوط' },
-    description: { 
-        en: 'Minimalist industrial dining table with golden oak finish and steel structural anchors.', 
-        ar: 'طاولة طعام صناعية بسيطة بلمسة من البلوط الذهبي وركائز هيكلية من الصلب.' 
+    shortDesc: { en: 'Minimalist industrial dining table in golden oak', ar: 'طاولة طعام صناعية بسيطة من البلوط الذهبي' },
+    description: {
+      en: 'Minimalist industrial dining table with golden oak finish and steel structural anchors.',
+      ar: 'طاولة طعام صناعية بسيطة بلمسة من البلوط الذهبي وركائز هيكلية من الصلب.',
     },
     price: 3200,
     category: 'tables',
     images: ['https://images.unsplash.com/photo-1577147448621-179100e3b8ac?auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Golden Oak', 'Steel'], ar: ['بلوط ذهبي', 'فولاذ'] },
+    dimensions: { en: '200 × 90 × 76 cm', ar: '٢٠٠ × ٩٠ × ٧٦ سم' },
+    inStock: true,
     featured: true,
-    sku: 'FE-T-002'
+    rating: 4.7,
+    reviews: 18,
   },
   {
     id: 'p3',
+    sku: 'FE-C-003',
     name: { en: 'INDUSTRIAL ARCHIVE CHAIR', ar: 'كرسي الأرشيف الصناعي' },
-    description: { 
-        en: 'Ergonomic task chair with leather upholstery and cast iron swivel mechanism.', 
-        ar: 'كرسي مهام مريح مع تنجيد من الجلد وآلية دوران من الحديد الزهر.' 
+    shortDesc: { en: 'Ergonomic leather task chair', ar: 'كرسي مهام جلدي مريح' },
+    description: {
+      en: 'Ergonomic task chair with leather upholstery and cast iron swivel mechanism.',
+      ar: 'كرسي مهام مريح مع تنجيد من الجلد وآلية دوران من الحديد الزهر.',
     },
     price: 1850,
     category: 'chairs',
     images: ['https://images.unsplash.com/photo-1580480055273-228ff5388ef8?auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Full-Grain Leather', 'Cast Iron'], ar: ['جلد طبيعي', 'حديد زهر'] },
+    dimensions: { en: '60 × 65 × 90–100 cm', ar: '٦٠ × ٦٥ × ٩٠–١٠٠ سم' },
+    inStock: true,
     featured: false,
-    sku: 'FE-C-003'
+    rating: 4.5,
+    reviews: 34,
   },
   {
     id: 'p4',
+    sku: 'FE-S-004',
     name: { en: 'MONOLITH STORAGE UNIT', ar: 'وحدة تخزين مونوليث' },
-    description: { 
-        en: 'Heavy-duty storage solution with modular walnut shelving and magnetic closures.', 
-        ar: 'حل تخزين شديد التحمل مع رفوف جوز معيارية وإغلاقات مغناطيسية.' 
+    shortDesc: { en: 'Modular walnut shelving with magnetic closures', ar: 'رفوف جوز معيارية مع إغلاق مغناطيسي' },
+    description: {
+      en: 'Heavy-duty storage solution with modular walnut shelving and magnetic closures.',
+      ar: 'حل تخزين شديد التحمل مع رفوف جوز معيارية وإغلاقات مغناطيسية.',
     },
     price: 2600,
     category: 'storage',
     images: ['https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Solid Walnut', 'Steel Anchors'], ar: ['جوز صلب', 'مثبتات فولاذية'] },
+    dimensions: { en: '120 × 40 × 200 cm', ar: '١٢٠ × ٤٠ × ٢٠٠ سم' },
+    inStock: true,
     featured: false,
-    sku: 'FE-S-004'
+    rating: 4.6,
+    reviews: 12,
   },
   {
     id: 'p5',
+    sku: 'FE-C-005',
     name: { en: 'ECLIPSE LOUNGE CHAIR', ar: 'كرسي الكسوف المريح' },
-    description: { 
-        en: 'Sculptured lounge chair designed for maximum comfort in luxury residential spaces.', 
-        ar: 'كرسي استرخاء منحوت مصمم لتوفير أقصى درجات الراحة في المساحات السكنية الفاخرة.' 
+    shortDesc: { en: 'Sculptured luxury lounge chair', ar: 'كرسي استرخاء فاخر منحوت' },
+    description: {
+      en: 'Sculptured lounge chair designed for maximum comfort in luxury residential spaces.',
+      ar: 'كرسي استرخاء منحوت مصمم لتوفير أقصى درجات الراحة في المساحات السكنية الفاخرة.',
     },
     price: 3800,
     category: 'chairs',
     images: ['https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Premium Fabric', 'Ash Wood Frame'], ar: ['قماش فاخر', 'إطار خشب دردار'] },
+    dimensions: { en: '85 × 90 × 80 cm', ar: '٨٥ × ٩٠ × ٨٠ سم' },
+    inStock: true,
     featured: true,
-    sku: 'FE-C-005'
+    rating: 4.9,
+    reviews: 9,
   },
   {
     id: 'p6',
+    sku: 'FE-O-006',
     name: { en: 'QUARTZ WORKSTATION', ar: 'محطة عمل كوارتز' },
-    description: { 
-        en: 'Compact professional workstation featuring golden oak and matte black frames.', 
-        ar: 'محطة عمل احترافية مدمجة تتميز بالبلوط الذهبي وإطارات سوداء غير لامعة.' 
+    shortDesc: { en: 'Compact professional workstation in golden oak', ar: 'محطة عمل احترافية مدمجة' },
+    description: {
+      en: 'Compact professional workstation featuring golden oak and matte black frames.',
+      ar: 'محطة عمل احترافية مدمجة تتميز بالبلوط الذهبي وإطارات سوداء غير لامعة.',
     },
     price: 2100,
     category: 'office',
     images: ['https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Golden Oak', 'Matte Steel'], ar: ['بلوط ذهبي', 'فولاذ مطفي'] },
+    dimensions: { en: '140 × 70 × 75 cm', ar: '١٤٠ × ٧٠ × ٧٥ سم' },
+    inStock: true,
     featured: false,
-    sku: 'FE-O-006'
+    rating: 4.4,
+    reviews: 15,
   },
   {
     id: 'p7',
+    sku: 'FE-T-007',
     name: { en: 'HORIZON COFFEE TABLE', ar: 'طاولة قهوة الأفق' },
-    description: { 
-        en: 'Low-profile coffee table with walnut grain patterns and glass overlay.', 
-        ar: 'طاولة قهوة منخفضة بلمسات خشب الجوز وطبقة زجاجية.' 
+    shortDesc: { en: 'Low-profile walnut coffee table with glass overlay', ar: 'طاولة قهوة منخفضة بطبقة زجاجية' },
+    description: {
+      en: 'Low-profile coffee table with walnut grain patterns and glass overlay.',
+      ar: 'طاولة قهوة منخفضة بلمسات خشب الجوز وطبقة زجاجية.',
     },
     price: 1400,
     category: 'tables',
     images: ['https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Walnut', 'Tempered Glass'], ar: ['خشب جوز', 'زجاج مقسّى'] },
+    dimensions: { en: '120 × 60 × 40 cm', ar: '١٢٠ × ٦٠ × ٤٠ سم' },
+    inStock: true,
     featured: false,
-    sku: 'FE-T-007'
+    rating: 4.3,
+    reviews: 27,
   },
   {
     id: 'p8',
+    sku: 'FE-S-008',
     name: { en: 'TITAN BOOKSHELF', ar: 'رف كتب تيتان' },
-    description: { 
-        en: 'Grand architectural bookshelf spanning 2.4 meters with reinforced oak supports.', 
-        ar: 'رف كتب معماري ضخم بطول 2.4 متر مع دعامات بلوط معززة.' 
+    shortDesc: { en: 'Grand 2.4m architectural bookshelf', ar: 'رف كتب معماري ضخم بطول ٢.٤ متر' },
+    description: {
+      en: 'Grand architectural bookshelf spanning 2.4 meters with reinforced oak supports.',
+      ar: 'رف كتب معماري ضخم بطول 2.4 متر مع دعامات بلوط معززة.',
     },
     price: 5200,
     category: 'storage',
-    images: ['https://images.unsplash.com/photo-1594620302200-9a7621.auto=format&fit=crop&q=80&w=800'],
+    images: ['https://images.unsplash.com/photo-1594620302200-9a762.auto=format&fit=crop&q=80&w=800'],
+    materials: { en: ['Reinforced Oak', 'Steel Rails'], ar: ['بلوط معزز', 'قضبان فولاذية'] },
+    dimensions: { en: '240 × 35 × 220 cm', ar: '٢٤٠ × ٣٥ × ٢٢٠ سم' },
+    inStock: true,
     featured: true,
-    sku: 'FE-S-008'
-  }
+    rating: 4.8,
+    reviews: 6,
+  },
 ];

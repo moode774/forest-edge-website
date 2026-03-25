@@ -14,6 +14,7 @@ export interface StoreProduct {
   badge?: { en: string; ar: string };
   rating: number;
   reviews: number;
+  sku?: string;
 }
 
 export interface CartItem {

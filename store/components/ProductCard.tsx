@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Star, Plus } from 'lucide-react';
-import { useLang } from '../../App';
+import { useLang } from '../context/LangContext';
 import { useStore } from '../context/StoreContext';
 import { motion } from 'framer-motion';
 

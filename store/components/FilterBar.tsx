@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLang } from '../../App';
+import { useLang } from '../context/LangContext';
 import { SlidersHorizontal, ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
